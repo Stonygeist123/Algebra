@@ -1,1 +1,1 @@
-# MathShit
+# Geogebra 2.0
