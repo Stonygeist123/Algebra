@@ -6,17 +6,16 @@ namespace MathShit.Analysis
     {
         private readonly string _fn;
         private readonly List<Token> _tokens = new();
-        private int _current = 0, _start;
-        private string? _error = null;
+        private int _current = 0, _start = 0;
+        private readonly DiagnosticBag _diagnostics = new();
+        public Diagnostic[] Diagnostics => _diagnostics.ToArray();
         public Lexer(string fn) => _fn = fn;
-        public string? Error => _error;
-
         public List<Token> Lex()
         {
             while (!IsAtEnd())
             {
-                _start = _current;
                 GetToken();
+                _start = _current;
             }
 
 
@@ -63,7 +62,7 @@ namespace MathShit.Analysis
                         return;
                     }
                     else
-                        _error = $"Unknown character '{c}'.";
+                        _diagnostics.Add($"Unknown character '{c}'.", Span);
                     break;
             }
 
@@ -86,6 +85,6 @@ namespace MathShit.Analysis
         private bool IsAtEnd() => _current >= _fn.Length;
         private char Current => IsAtEnd() ? '\0' : _fn[_current];
         private void Advance() => ++_current;
-        private TextSpan Span => new(_start, _current - _start);
+        private TextSpan Span => new(_start, _current - _start + 1);
     }
 }

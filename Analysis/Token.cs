@@ -22,6 +22,6 @@ namespace MathShit.Analysis
             Lexeme = lexeme;
             Span = span;
         }
-        public override string ToString() => $"Kind:   {Kind}\nLexeme: {Lexeme}\nSpan:   [{Span.Start}..{Span.End}]";
+        public override string ToString() => $"Kind:   {Kind}\tLexeme: {Lexeme}\tSpan:   [{Span.Start}..{Span.End}]";
     }
 }

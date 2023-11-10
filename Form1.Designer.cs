@@ -63,9 +63,12 @@
             // 
             // Txt_Res
             // 
+            Txt_Res.AcceptsReturn = true;
+            Txt_Res.AcceptsTab = true;
             Txt_Res.Location = new Point(47, 74);
             Txt_Res.Multiline = true;
             Txt_Res.Name = "Txt_Res";
+            Txt_Res.ScrollBars = ScrollBars.Vertical;
             Txt_Res.Size = new Size(1144, 412);
             Txt_Res.TabIndex = 3;
             // 
