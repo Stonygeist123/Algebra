@@ -4,9 +4,10 @@ namespace MathShit.Analysis
 {
     public enum TokenKind
     {
-        Number, Parameter,
+        Number, Name,
 
-        Plus, Minus, Star, Slash, LParen, RParen,
+        Plus, Minus, Star, Slash, Power,
+        LParen, RParen,
 
         Bad, EOF
     }

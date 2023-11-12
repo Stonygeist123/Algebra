@@ -2,7 +2,7 @@
 
 namespace MathShit.Miscellaneous
 {
-    public class DiagnosticBag : IEnumerable<Diagnostic>
+    internal class DiagnosticBag : IEnumerable<Diagnostic>
     {
         private readonly List<Diagnostic> _diagnostics = new();
         public Diagnostic[] Diagnostics { get => _diagnostics.ToArray(); }
@@ -12,7 +12,7 @@ namespace MathShit.Miscellaneous
         public IEnumerator<Diagnostic> GetEnumerator() => _diagnostics.GetEnumerator();
     }
 
-    public readonly struct Diagnostic
+    internal readonly struct Diagnostic
     {
         public Diagnostic(string message, TextSpan span)
         {

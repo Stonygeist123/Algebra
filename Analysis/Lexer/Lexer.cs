@@ -1,6 +1,6 @@
 ﻿using MathShit.Miscellaneous;
 
-namespace MathShit.Analysis
+namespace MathShit.Analysis.Lexer
 {
     internal class Lexer
     {
@@ -10,7 +10,7 @@ namespace MathShit.Analysis
         private readonly DiagnosticBag _diagnostics = new();
         public Diagnostic[] Diagnostics => _diagnostics.ToArray();
         public Lexer(string fn) => _fn = fn;
-        public List<Token> Lex()
+        public Token[] Lex()
         {
             while (!IsAtEnd())
             {
@@ -18,14 +18,14 @@ namespace MathShit.Analysis
                 _start = _current;
             }
 
-
             _tokens.Add(new(TokenKind.EOF, "", Span));
-            return _tokens;
+            return _tokens.ToArray();
         }
 
         private void GetToken()
         {
             char c = Current;
+            Advance();
             TokenKind kind = TokenKind.Bad;
             string lexeme = c.ToString();
             switch (c)
@@ -42,6 +42,9 @@ namespace MathShit.Analysis
                 case '/':
                     kind = TokenKind.Slash;
                     break;
+                case '^':
+                    kind = TokenKind.Power;
+                    break;
                 case '(':
                     kind = TokenKind.LParen;
                     break;
@@ -52,13 +55,16 @@ namespace MathShit.Analysis
                 case '\t':
                 case '\n':
                 case '\r':
-                    Advance();
                     return;
                 default:
                     if (char.IsDigit(c))
                     {
-                        GetNumber();
-                        Advance();
+                        GetNumber(c);
+                        return;
+                    }
+                    if (char.IsLetter(c))
+                    {
+                        GetAlpha(c);
                         return;
                     }
                     else
@@ -66,25 +72,50 @@ namespace MathShit.Analysis
                     break;
             }
 
-            Advance();
             _tokens.Add(new(kind, lexeme, Span));
         }
 
-        private void GetNumber()
+        private void GetNumber(char c)
         {
-            string lexeme = "";
+            string lexeme = c.ToString();
             while (!IsAtEnd() && char.IsDigit(Current))
             {
                 lexeme += Current;
                 Advance();
             }
 
+            if (Current == '.')
+            {
+                lexeme += Current;
+                Advance();
+                if (!char.IsDigit(Current))
+                    _diagnostics.Add($"Malformed number.", Span);
+
+                while (!IsAtEnd() && char.IsDigit(Current))
+                {
+                    lexeme += Current;
+                    Advance();
+                }
+            }
+
             _tokens.Add(new(TokenKind.Number, lexeme, Span));
+        }
+
+        private void GetAlpha(char c)
+        {
+            string lexeme = c.ToString();
+            while (!IsAtEnd() && char.IsLetter(Current))
+            {
+                lexeme += Current;
+                Advance();
+            }
+
+            _tokens.Add(new(TokenKind.Name, lexeme, Span));
         }
 
         private bool IsAtEnd() => _current >= _fn.Length;
         private char Current => IsAtEnd() ? '\0' : _fn[_current];
         private void Advance() => ++_current;
-        private TextSpan Span => new(_start, _current - _start + 1);
+        private TextSpan Span => new(_start, _current - _start);
     }
 }

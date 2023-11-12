@@ -10,5 +10,7 @@
             Start = start;
             Length = length;
         }
+
+        public static TextSpan From(int start, int end) => new(start, end - start + 1);
     }
 }

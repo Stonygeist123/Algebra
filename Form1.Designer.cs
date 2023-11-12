@@ -28,18 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             Txt_Fn = new TextBox();
             label1 = new Label();
             Btn_Graph = new Button();
-            Txt_Res = new TextBox();
+            Img_Graph = new PictureBox();
+            bindingSource1 = new BindingSource(components);
+            ((System.ComponentModel.ISupportInitialize)Img_Graph).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)bindingSource1).BeginInit();
             SuspendLayout();
             // 
             // Txt_Fn
             // 
+            Txt_Fn.AcceptsTab = true;
             Txt_Fn.Location = new Point(47, 12);
             Txt_Fn.Name = "Txt_Fn";
             Txt_Fn.Size = new Size(100, 23);
             Txt_Fn.TabIndex = 0;
+            Txt_Fn.TextChanged += Txt_Fn_TextChanged;
             // 
             // label1
             // 
@@ -61,16 +67,13 @@
             Btn_Graph.UseVisualStyleBackColor = true;
             Btn_Graph.Click += Btn_Graph_Click;
             // 
-            // Txt_Res
+            // Img_Graph
             // 
-            Txt_Res.AcceptsReturn = true;
-            Txt_Res.AcceptsTab = true;
-            Txt_Res.Location = new Point(47, 74);
-            Txt_Res.Multiline = true;
-            Txt_Res.Name = "Txt_Res";
-            Txt_Res.ScrollBars = ScrollBars.Vertical;
-            Txt_Res.Size = new Size(1144, 412);
-            Txt_Res.TabIndex = 3;
+            Img_Graph.Location = new Point(12, 41);
+            Img_Graph.Name = "Img_Graph";
+            Img_Graph.Size = new Size(1255, 471);
+            Img_Graph.TabIndex = 5;
+            Img_Graph.TabStop = false;
             // 
             // Form1
             // 
@@ -78,12 +81,15 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
             ClientSize = new Size(1279, 524);
-            Controls.Add(Txt_Res);
+            Controls.Add(Img_Graph);
             Controls.Add(Btn_Graph);
             Controls.Add(label1);
             Controls.Add(Txt_Fn);
             Name = "Form1";
             Text = "Form1";
+            Load += Form1_Load;
+            ((System.ComponentModel.ISupportInitialize)Img_Graph).EndInit();
+            ((System.ComponentModel.ISupportInitialize)bindingSource1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -93,6 +99,7 @@
         private TextBox Txt_Fn;
         private Label label1;
         private Button Btn_Graph;
-        private TextBox Txt_Res;
+        private PictureBox Img_Graph;
+        private BindingSource bindingSource1;
     }
 }
