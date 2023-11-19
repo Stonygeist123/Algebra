@@ -47,8 +47,8 @@ namespace MathShit.Syntax.Parser
         public Expr Expr { get; }
         public GroupingExpr(Expr expr) => Expr = expr.Simplify();
         public override float? Evaluate(float param) => Expr.Evaluate(param);
-        public override Expr? Derivative() => Expr.Derivative()?.Simplify();
-        public override Expr Simplify() => Expr;
+        public override Expr? Derivative() => Expr.Derivative();
+        public override Expr Simplify() => new GroupingExpr(Expr.Simplify());
         public override string ToString() => "(" + Expr.ToString() + ")";
     }
 
@@ -155,14 +155,16 @@ namespace MathShit.Syntax.Parser
 
         public override Expr Simplify()
         {
-            if (Left is LiteralExpr l && Right is LiteralExpr r)
+            float? lV = Left is LiteralExpr l ? l.Value : null; // Left is NameExpr ln && !ln.Param ? ln.Evaluate(1) : null;
+            float? rV = Right is LiteralExpr r ? r.Value : null; // Right is NameExpr rn && !rn.Param ? rn.Evaluate(1) : null;
+            if (lV is not null && rV is not null)
                 return new LiteralExpr(Op switch
                 {
-                    TokenKind.Plus => l.Value + r.Value,
-                    TokenKind.Minus => l.Value - r.Value,
-                    TokenKind.Star => l.Value * r.Value,
-                    TokenKind.Slash => l.Value / r.Value,
-                    TokenKind.Power => MathF.Pow(l.Value, r.Value),
+                    TokenKind.Plus => lV.Value + rV.Value,
+                    TokenKind.Minus => lV.Value - rV.Value,
+                    TokenKind.Star => lV.Value * rV.Value,
+                    TokenKind.Slash => lV.Value / rV.Value,
+                    TokenKind.Power => MathF.Pow(lV.Value, rV.Value),
                     _ => 0f
                 });
             else if (Op == TokenKind.Star)
@@ -183,6 +185,14 @@ namespace MathShit.Syntax.Parser
                 else if (Right is LiteralExpr r1 && r1.Value == 1)
                     return Left;
             }
+            else if (Left is BinaryExpr)
+                return Right is BinaryExpr
+                    ? new BinaryExpr(new GroupingExpr(Left), Op, new GroupingExpr(Right))
+                    : new BinaryExpr(new GroupingExpr(Left), Op, Right);
+            else if (Right is BinaryExpr)
+                return Left is BinaryExpr
+                    ? new BinaryExpr(new GroupingExpr(Left), Op, new GroupingExpr(Right))
+                    : new BinaryExpr(Left, Op, new GroupingExpr(Right));
 
             return new BinaryExpr(Left, Op, Right);
         }
