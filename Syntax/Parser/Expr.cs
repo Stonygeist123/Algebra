@@ -37,7 +37,7 @@ namespace MathShit.Syntax.Parser
         public bool Param => Name == "x";
         public NameExpr(string name) => Name = name;
         public override float? Evaluate(float param) => Param ? param : BuiltIns.Constants[Name];
-        public override Expr? Derivative() => new LiteralExpr(1);
+        public override Expr? Derivative() => new LiteralExpr(Param ? 1 : 0);
         public override Expr Simplify() => this;
         public override string ToString() => Name;
     }
@@ -128,11 +128,11 @@ namespace MathShit.Syntax.Parser
                 TokenKind.Minus => left - right,
                 TokenKind.Star => left * right,
                 TokenKind.Slash => left / right,
-                TokenKind.Power => MathF.Pow(left ?? 1, right ?? 1),
+                TokenKind.Power => left < 0 ? -MathF.Pow(-left.Value, right.Value) : MathF.Pow(left.Value, right.Value),
                 _ => null
             };
 
-            return res is float.NegativeInfinity or float.PositiveInfinity ? null : res;
+            return res;
         }
 
         public override Expr? Derivative()
@@ -155,16 +155,14 @@ namespace MathShit.Syntax.Parser
 
         public override Expr Simplify()
         {
-            float? lV = Left is LiteralExpr l ? l.Value : null; // Left is NameExpr ln && !ln.Param ? ln.Evaluate(1) : null;
-            float? rV = Right is LiteralExpr r ? r.Value : null; // Right is NameExpr rn && !rn.Param ? rn.Evaluate(1) : null;
-            if (lV is not null && rV is not null)
+            if (Left is LiteralExpr l && Right is LiteralExpr r)
                 return new LiteralExpr(Op switch
                 {
-                    TokenKind.Plus => lV.Value + rV.Value,
-                    TokenKind.Minus => lV.Value - rV.Value,
-                    TokenKind.Star => lV.Value * rV.Value,
-                    TokenKind.Slash => lV.Value / rV.Value,
-                    TokenKind.Power => MathF.Pow(lV.Value, rV.Value),
+                    TokenKind.Plus => l.Value + r.Value,
+                    TokenKind.Minus => l.Value - r.Value,
+                    TokenKind.Star => l.Value * r.Value,
+                    TokenKind.Slash => l.Value / r.Value,
+                    TokenKind.Power => MathF.Pow(l.Value, r.Value),
                     _ => 0f
                 });
             else if (Op == TokenKind.Star)
@@ -183,6 +181,13 @@ namespace MathShit.Syntax.Parser
                 if (Left is LiteralExpr l1 && l1.Value == 0)
                     return new LiteralExpr(0);
                 else if (Right is LiteralExpr r1 && r1.Value == 1)
+                    return Left;
+            }
+            else if (Op == TokenKind.Plus)
+            {
+                if (Left is LiteralExpr l1 && l1.Value == 0)
+                    return Right;
+                else if (Right is LiteralExpr r1 && r1.Value == 0)
                     return Left;
             }
             else if (Left is BinaryExpr)

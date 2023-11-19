@@ -6,7 +6,7 @@ namespace MathShit
 {
     public partial class Form1 : Form
     {
-        private float _scaleFactor = 40f;
+        private float _scaleFactor = 100f;
         private Expr? _expr = null, _dx = null;
         private bool _hasError = false;
         private const float increment = .01f, graphWidth = 1.5f;
@@ -75,22 +75,21 @@ namespace MathShit
                 float i = -w / 2;
                 float py = h / 2;
                 for (; i < w / 2; i += increment)
-                    if (_expr.Evaluate(i) is float v)
+                    if (_expr.Evaluate(i) is float v && !float.IsNaN(v) && float.IsFinite(v))
                     {
                         py = v;
                         break;
                     }
 
-                path.MoveTo(new SKPoint(_scaleFactor * i + w / 2, -_scaleFactor * py + h / 2));
+                path.MoveTo(new SKPoint(i + w / 2, -py + h / 2));
                 for (i = -w / 2; i < w / 2; i += increment)
                 {
                     float? p_y = _expr.Evaluate(i), p_y1 = _expr.Evaluate(i + increment);
-                    if (p_y is float y && p_y1 is float y1)
+                    if (p_y is float y && p_y1 is float y1 && !float.IsNaN(y) && !float.IsNaN(y1) && float.IsFinite(y) && float.IsFinite(y1))
                     {
                         float coord_y = -_scaleFactor * y + h / 2;
                         float coord_y1 = -_scaleFactor * y1 + h / 2;
-                        if (coord_y == float.NegativeInfinity || coord_y1 == float.NegativeInfinity ||
-                            coord_y == float.PositiveInfinity || coord_y1 == float.PositiveInfinity)
+                        if (float.IsInfinity(coord_y) || float.IsInfinity(coord_y))
                             continue;
 
                         float x1 = _scaleFactor * i + w / 2;
@@ -101,22 +100,22 @@ namespace MathShit
 
                 canvas.DrawPath(path, paint);
                 path.Dispose();
-
-                paint = new()
-                {
-                    Color = SKColors.Red,
-                    StrokeWidth = graphWidth,
-                    IsAntialias = true,
-                    IsStroke = true,
-                    Style = SKPaintStyle.Stroke
-                };
                 if (_dx is not null)
                 {
+                    paint = new()
+                    {
+                        Color = SKColors.Red,
+                        StrokeWidth = graphWidth,
+                        IsAntialias = true,
+                        IsStroke = true,
+                        Style = SKPaintStyle.Stroke
+                    };
+
                     path = new();
                     i = -w / 2;
                     py = h / 2;
                     for (; i < w / 2; i += increment)
-                        if (_dx.Evaluate(i) is float v)
+                        if (_dx.Evaluate(i) is float v && !float.IsNaN(v) && float.IsFinite(v))
                         {
                             py = v;
                             break;
@@ -126,12 +125,11 @@ namespace MathShit
                     for (i = -w / 2; i < w / 2; i += increment)
                     {
                         float? p_y = _dx.Evaluate(i), p_y1 = _dx.Evaluate(i + increment);
-                        if (p_y is float y && p_y1 is float y1)
+                        if (p_y is float y && p_y1 is float y1 && !float.IsNaN(y) && !float.IsNaN(y1) && float.IsFinite(y) && float.IsFinite(y1))
                         {
                             float coord_y = -_scaleFactor * y + h / 2;
                             float coord_y1 = -_scaleFactor * y1 + h / 2;
-                            if (coord_y == float.NegativeInfinity || coord_y1 == float.NegativeInfinity ||
-                                coord_y == float.PositiveInfinity || coord_y1 == float.PositiveInfinity)
+                            if (float.IsInfinity(coord_y) || float.IsInfinity(coord_y))
                                 continue;
 
                             float x1 = _scaleFactor * i + w / 2;
