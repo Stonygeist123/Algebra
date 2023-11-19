@@ -9,6 +9,7 @@ namespace MathShit.Syntax.Parser
         public abstract float? Evaluate(float param);
         public abstract Expr? Derivative();
         public abstract Expr Simplify();
+        public abstract override string ToString();
     }
 
     public class ErrorExpr : Expr
@@ -16,6 +17,7 @@ namespace MathShit.Syntax.Parser
         public override float? Evaluate(float _) => 0;
         public override Expr? Derivative() => this;
         public override Expr Simplify() => this;
+        public override string ToString() => "?";
     }
 
     public class LiteralExpr : Expr
@@ -26,6 +28,7 @@ namespace MathShit.Syntax.Parser
         public override float? Evaluate(float _) => Value;
         public override Expr? Derivative() => new LiteralExpr(0);
         public override Expr Simplify() => this;
+        public override string ToString() => Value.ToString();
     }
 
     public class NameExpr : Expr
@@ -36,33 +39,32 @@ namespace MathShit.Syntax.Parser
         public override float? Evaluate(float param) => Param ? param : BuiltIns.Constants[Name];
         public override Expr? Derivative() => new LiteralExpr(1);
         public override Expr Simplify() => this;
+        public override string ToString() => Name;
     }
 
     public class GroupingExpr : Expr
     {
         public Expr Expr { get; }
-        public GroupingExpr(Expr expr) => Expr = expr;
+        public GroupingExpr(Expr expr) => Expr = expr.Simplify();
         public override float? Evaluate(float param) => Expr.Evaluate(param);
-        public override Expr? Derivative() => Expr.Simplify().Derivative()?.Simplify();
-        public override Expr Simplify() => Expr.Simplify();
+        public override Expr? Derivative() => Expr.Derivative()?.Simplify();
+        public override Expr Simplify() => Expr;
+        public override string ToString() => "(" + Expr.ToString() + ")";
     }
 
     public class AbsExpr : Expr
     {
         public Expr Expr { get; }
-        public AbsExpr(Expr expr) => Expr = expr;
-        public override Expr? Derivative() => BuiltIns.FnsDerivs("abs", Expr);
+        public AbsExpr(Expr expr) => Expr = expr.Simplify();
+        public override Expr? Derivative() => new BinaryExpr(Expr.Simplify().Derivative()?.Simplify() ?? new ErrorExpr(), TokenKind.Star, BuiltIns.FnsDerivs("abs", Expr));
         public override float? Evaluate(float param)
         {
             float? v = Expr.Evaluate(param);
             return v is null ? null : MathF.Abs(v.Value);
         }
 
-        public override Expr Simplify()
-        {
-            Expr expr = Expr.Simplify();
-            return expr is LiteralExpr l ? new LiteralExpr(BuiltIns.Fns["abs"](l.Value)) : new AbsExpr(expr);
-        }
+        public override Expr Simplify() => Expr is LiteralExpr l ? new LiteralExpr(BuiltIns.Fns["abs"](l.Value)) : new AbsExpr(Expr);
+        public override string ToString() => "|" + Expr.ToString() + "|";
     }
 
     public class UnaryExpr : Expr
@@ -72,7 +74,7 @@ namespace MathShit.Syntax.Parser
         public UnaryExpr(TokenKind op, Expr operand)
         {
             Op = op;
-            Operand = operand;
+            Operand = operand.Simplify();
         }
 
         public override float? Evaluate(float param) => Op switch
@@ -83,31 +85,32 @@ namespace MathShit.Syntax.Parser
 
         public override Expr? Derivative()
         {
-            Expr? dx = Operand.Simplify().Derivative()?.Simplify();
+            Expr? dx = Operand.Derivative()?.Simplify();
             return dx is null ? null : new UnaryExpr(Op, dx!).Simplify();
         }
 
         public override Expr Simplify()
         {
-            Expr expr = Operand.Simplify();
+            Expr expr = Operand;
             return Op switch
             {
                 TokenKind.Minus => expr is LiteralExpr l ? new LiteralExpr(-l.Value) : new UnaryExpr(TokenKind.Minus, expr),
                 _ => new ErrorExpr()
             };
         }
+        public override string ToString() => "-" + Operand.ToString();
     }
 
     public class BinaryExpr : Expr
     {
         public Expr Left { get; }
-        public TokenKind? Op { get; }
+        public TokenKind Op { get; }
         public Expr Right { get; }
-        public BinaryExpr(Expr left, TokenKind? op, Expr right)
+        public BinaryExpr(Expr left, TokenKind op, Expr right)
         {
-            Left = left;
+            Left = left.Simplify();
             Op = op;
-            Right = right;
+            Right = right.Simplify();
         }
 
         public override float? Evaluate(float param)
@@ -123,7 +126,7 @@ namespace MathShit.Syntax.Parser
             {
                 TokenKind.Plus => left + right,
                 TokenKind.Minus => left - right,
-                null or TokenKind.Star => left * right,
+                TokenKind.Star => left * right,
                 TokenKind.Slash => left / right,
                 TokenKind.Power => MathF.Pow(left ?? 1, right ?? 1),
                 _ => null
@@ -134,8 +137,8 @@ namespace MathShit.Syntax.Parser
 
         public override Expr? Derivative()
         {
-            Expr? leftDx = Left.Simplify().Derivative()?.Simplify();
-            Expr? rightDx = Right.Simplify().Derivative()?.Simplify();
+            Expr? leftDx = Left.Derivative();
+            Expr? rightDx = Right.Derivative();
             if (leftDx is null || rightDx is null)
                 return null;
 
@@ -143,48 +146,56 @@ namespace MathShit.Syntax.Parser
             {
                 TokenKind.Plus => new BinaryExpr(leftDx, TokenKind.Plus, rightDx),
                 TokenKind.Minus => new BinaryExpr(leftDx, TokenKind.Minus, rightDx),
-                null or TokenKind.Star => new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Plus, new BinaryExpr(Left, TokenKind.Star, rightDx)),
+                TokenKind.Star => new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Plus, new BinaryExpr(Left, TokenKind.Star, rightDx)),
                 TokenKind.Slash => new BinaryExpr(new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Minus, new BinaryExpr(Left, TokenKind.Star, rightDx)), TokenKind.Slash, new BinaryExpr(Right, TokenKind.Power, new LiteralExpr(2))),
-                TokenKind.Power => Right is LiteralExpr l && l.Value == 1 ? Right : new BinaryExpr(Right, TokenKind.Star, new BinaryExpr(Left, TokenKind.Power, new BinaryExpr(Right, TokenKind.Minus, new LiteralExpr(1)))),
+                TokenKind.Power => new BinaryExpr(leftDx, TokenKind.Star, Right is LiteralExpr r && r.Value == 1 ? Left : new BinaryExpr(Right, TokenKind.Star, new BinaryExpr(Left, TokenKind.Power, new BinaryExpr(Right, TokenKind.Minus, new LiteralExpr(1))))),
                 _ => null
             })?.Simplify();
         }
 
         public override Expr Simplify()
         {
-            Expr left = Left.Simplify();
-            Expr right = Right.Simplify();
-            if (left is LiteralExpr l && right is LiteralExpr r)
+            if (Left is LiteralExpr l && Right is LiteralExpr r)
                 return new LiteralExpr(Op switch
                 {
                     TokenKind.Plus => l.Value + r.Value,
                     TokenKind.Minus => l.Value - r.Value,
-                    null or TokenKind.Star => l.Value * r.Value,
+                    TokenKind.Star => l.Value * r.Value,
                     TokenKind.Slash => l.Value / r.Value,
                     TokenKind.Power => MathF.Pow(l.Value, r.Value),
                     _ => 0f
                 });
             else if (Op == TokenKind.Star)
             {
-                if (left is LiteralExpr l1 && l1.Value == 1)
-                    return right;
-                else if (right is LiteralExpr r1 && r1.Value == 1)
-                    return left;
-                else if (left is LiteralExpr l2 && l2.Value == 0)
+                if (Left is LiteralExpr l1 && l1.Value == 1)
+                    return Right;
+                else if (Right is LiteralExpr r1 && r1.Value == 1)
+                    return Left;
+                else if (Left is LiteralExpr l2 && l2.Value == 0)
                     return new LiteralExpr(0);
-                else if (right is LiteralExpr r2 && r2.Value == 0)
+                else if (Right is LiteralExpr r2 && r2.Value == 0)
                     return new LiteralExpr(0);
             }
             else if (Op == TokenKind.Slash)
             {
-                if (left is LiteralExpr l1 && l1.Value == 0)
+                if (Left is LiteralExpr l1 && l1.Value == 0)
                     return new LiteralExpr(0);
-                else if (right is LiteralExpr r1 && r1.Value == 1)
-                    return left;
+                else if (Right is LiteralExpr r1 && r1.Value == 1)
+                    return Left;
             }
 
-            return new BinaryExpr(left, Op, right);
+            return new BinaryExpr(Left, Op, Right);
         }
+
+        public override string ToString() => Left.ToString() + (Op switch
+        {
+            TokenKind.Plus => " + ",
+            TokenKind.Minus => " - ",
+            TokenKind.Star => "*",
+            TokenKind.Slash => "/",
+            TokenKind.Power => "^",
+            _ => ""
+        }) + Right.ToString();
     }
 
     public class FunctionExpr : Expr
@@ -196,7 +207,7 @@ namespace MathShit.Syntax.Parser
         {
             Name = name;
             Fn = BuiltIns.Fns[Name];
-            Arg = arg;
+            Arg = arg.Simplify();
         }
 
         public FunctionExpr(Func<float, float> fn, string name, Expr arg)
@@ -209,14 +220,11 @@ namespace MathShit.Syntax.Parser
         public override float? Evaluate(float param) => Fn(param);
         public override Expr? Derivative()
         {
-            Expr? arg = Arg.Simplify().Derivative()?.Simplify();
+            Expr? arg = Arg.Derivative()?.Simplify();
             return arg is null ? null : new BinaryExpr(arg, TokenKind.Star, BuiltIns.FnsDerivs(Name, Arg)).Simplify();
         }
 
-        public override Expr Simplify()
-        {
-            Expr arg = Arg.Simplify();
-            return arg is LiteralExpr l ? new LiteralExpr(Fn(l.Value)) : (Expr)new FunctionExpr(Fn, Name, arg);
-        }
+        public override Expr Simplify() => Arg is LiteralExpr l ? new LiteralExpr(Fn(l.Value)) : (Expr)new FunctionExpr(Fn, Name, Arg);
+        public override string ToString() => Name + "(" + Arg.ToString() + ")";
     }
 }

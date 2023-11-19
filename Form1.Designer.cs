@@ -34,6 +34,7 @@
             Btn_Graph = new Button();
             Img_Graph = new PictureBox();
             bindingSource1 = new BindingSource(components);
+            Txt_Dx = new Label();
             ((System.ComponentModel.ISupportInitialize)Img_Graph).BeginInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).BeginInit();
             SuspendLayout();
@@ -43,8 +44,9 @@
             Txt_Fn.AcceptsTab = true;
             Txt_Fn.Location = new Point(47, 12);
             Txt_Fn.Name = "Txt_Fn";
-            Txt_Fn.Size = new Size(100, 23);
+            Txt_Fn.Size = new Size(563, 23);
             Txt_Fn.TabIndex = 0;
+            Txt_Fn.KeyDown += Txt_Fn_OnKeyDown;
             // 
             // label1
             // 
@@ -58,7 +60,7 @@
             // Btn_Graph
             // 
             Btn_Graph.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            Btn_Graph.Location = new Point(153, 12);
+            Btn_Graph.Location = new Point(616, 12);
             Btn_Graph.Name = "Btn_Graph";
             Btn_Graph.Size = new Size(75, 23);
             Btn_Graph.TabIndex = 2;
@@ -74,18 +76,28 @@
             Img_Graph.TabIndex = 5;
             Img_Graph.TabStop = false;
             // 
+            // Txt_Dx
+            // 
+            Txt_Dx.AutoSize = true;
+            Txt_Dx.Location = new Point(731, 16);
+            Txt_Dx.Name = "Txt_Dx";
+            Txt_Dx.Size = new Size(42, 15);
+            Txt_Dx.TabIndex = 6;
+            Txt_Dx.Text = "f'(x) = ";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
             ClientSize = new Size(1279, 524);
+            Controls.Add(Txt_Dx);
             Controls.Add(Img_Graph);
             Controls.Add(Btn_Graph);
             Controls.Add(label1);
             Controls.Add(Txt_Fn);
             Name = "Form1";
-            Text = "Form1";
+            Text = "Geogebra 2.0 ";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)Img_Graph).EndInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).EndInit();
@@ -100,6 +112,6 @@
         private Button Btn_Graph;
         private PictureBox Img_Graph;
         private BindingSource bindingSource1;
-        private CheckBox Check_Roots;
+        private Label Txt_Dx;
     }
 }

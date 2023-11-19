@@ -118,7 +118,7 @@ namespace MathShit.Syntax.Parser
 
                     Advance();
                     right = CheckExtension(new GroupingExpr(right), OperaterPrecedence(TokenKind.Power));
-                    expr = new BinaryExpr(expr, null, right);
+                    expr = new BinaryExpr(expr, TokenKind.Star, right);
                 }
             }
             else if (t.Kind == TokenKind.Name)
@@ -126,7 +126,7 @@ namespace MathShit.Syntax.Parser
                 Advance();
                 if (t.Lexeme != "x" && !BuiltIns.Constants.Any(c => c.Key == t.Lexeme))
                     _diagnostics.Add($"Constant variables are not supported yet.", t.Span);
-                return CheckExtension(new BinaryExpr(expr, null, CheckExtension(new NameExpr(t.Lexeme), OperaterPrecedence(TokenKind.Star))));
+                return CheckExtension(new BinaryExpr(expr, TokenKind.Star, CheckExtension(new NameExpr(t.Lexeme), OperaterPrecedence(TokenKind.Star))), parentPrecedence);
             }
             else if (expr is NameExpr n && n.Name != "x" && !BuiltIns.Constants.Any(c => c.Key == n.Name))
                 _diagnostics.Add($"Constant variables are not supported yet.", t.Span);

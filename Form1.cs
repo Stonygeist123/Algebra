@@ -19,6 +19,13 @@ namespace MathShit
 
         private void Btn_Graph_Click(object sender, EventArgs e)
         {
+            Analyse();
+            if (!_hasError)
+                DrawGraph();
+        }
+
+        private void Analyse()
+        {
             Lexer lexer = new(Txt_Fn.Text);
             Token[] tokens = lexer.Lex();
             if (!(_hasError = lexer.Diagnostics.Any()))
@@ -26,9 +33,8 @@ namespace MathShit
                 Parser parser = new(tokens);
                 _expr = parser.Parse().Simplify();
                 _dx = _expr.Derivative();
+                Txt_Dx.Text = "f'(x) = " + _dx?.ToString() ?? "";
                 _hasError = parser.Diagnostics.Any();
-                if (!_hasError)
-                    DrawGraph();
             }
         }
 
@@ -162,11 +168,15 @@ namespace MathShit
             DrawGraph();
         }
 
-        protected void Txt_Fn_OnKeyDown(KeyEventArgs e)
+        protected void Txt_Fn_OnKeyDown(object sender, KeyEventArgs e)
         {
             base.OnKeyDown(e);
             if (e.KeyCode == Keys.Enter)
-                DrawGraph();
+            {
+                Analyse();
+                if (!_hasError)
+                    DrawGraph();
+            }
         }
     }
 }
