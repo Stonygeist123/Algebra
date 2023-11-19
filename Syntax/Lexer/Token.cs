@@ -1,6 +1,6 @@
 ﻿using MathShit.Miscellaneous;
 
-namespace MathShit.Analysis
+namespace MathShit.Syntax.Lexer
 {
     public enum TokenKind
     {
@@ -8,6 +8,8 @@ namespace MathShit.Analysis
 
         Plus, Minus, Star, Slash, Power,
         LParen, RParen,
+
+        Pipe,
 
         Bad, EOF
     }

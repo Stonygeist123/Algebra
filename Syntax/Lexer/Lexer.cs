@@ -1,6 +1,6 @@
 ﻿using MathShit.Miscellaneous;
 
-namespace MathShit.Analysis.Lexer
+namespace MathShit.Syntax.Lexer
 {
     internal class Lexer
     {
@@ -50,6 +50,9 @@ namespace MathShit.Analysis.Lexer
                     break;
                 case ')':
                     kind = TokenKind.RParen;
+                    break;
+                case '|':
+                    kind = TokenKind.Pipe;
                     break;
                 case ' ':
                 case '\t':

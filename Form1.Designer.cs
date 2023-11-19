@@ -45,7 +45,6 @@
             Txt_Fn.Name = "Txt_Fn";
             Txt_Fn.Size = new Size(100, 23);
             Txt_Fn.TabIndex = 0;
-            Txt_Fn.TextChanged += Txt_Fn_TextChanged;
             // 
             // label1
             // 
@@ -101,5 +100,6 @@
         private Button Btn_Graph;
         private PictureBox Img_Graph;
         private BindingSource bindingSource1;
+        private CheckBox Check_Roots;
     }
 }

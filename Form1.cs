@@ -1,26 +1,34 @@
-using MathShit.Analysis;
-using MathShit.Analysis.Lexer;
-using MathShit.Analysis.Parser;
+using MathShit.Syntax.Lexer;
+using MathShit.Syntax.Parser;
 using SkiaSharp;
 
 namespace MathShit
 {
     public partial class Form1 : Form
     {
-        private float scaleFactor = 1f;
-        private Expr? expr = null;
+        private float _scaleFactor = 40f;
+        private Expr? _expr = null, _dx = null;
+        private bool _hasError = false;
+        private const float increment = .01f, graphWidth = 1.5f;
         public Form1() => InitializeComponent();
-        private void Form1_Load(object sender, EventArgs e) => DrawGraph();
-        private void Txt_Fn_TextChanged(object sender, EventArgs e) => Txt_Fn.Text = " " + Txt_Fn.Text.Trim();
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            Img_Graph.SizeMode = PictureBoxSizeMode.Zoom;
+            DrawGraph();
+        }
+
         private void Btn_Graph_Click(object sender, EventArgs e)
         {
             Lexer lexer = new(Txt_Fn.Text);
             Token[] tokens = lexer.Lex();
-            if (!lexer.Diagnostics.Any())
+            if (!(_hasError = lexer.Diagnostics.Any()))
             {
                 Parser parser = new(tokens);
-                expr = parser.Parse();
-                DrawGraph();
+                _expr = parser.Parse().Simplify();
+                _dx = _expr.Derivative();
+                _hasError = parser.Diagnostics.Any();
+                if (!_hasError)
+                    DrawGraph();
             }
         }
 
@@ -32,7 +40,7 @@ namespace MathShit
             Img_Graph.Location = new Point((int)MathF.Floor(Width * .02f), 2 * Txt_Fn.Height);
 
             SKImageInfo imgInfo = new(w, h);
-            using SKSurface surface = SKSurface.Create(imgInfo);
+            SKSurface surface = SKSurface.Create(imgInfo);
             SKCanvas canvas = surface.Canvas;
             canvas.Clear();
             SKPaint paint = new()
@@ -47,30 +55,88 @@ namespace MathShit
             canvas.DrawLine(new(w / 2, 0), new(w / 2, h), paint);
             canvas.Save();
 
-            if (expr is not null)
+            if (!_hasError && _expr is not null)
             {
                 paint = new()
                 {
                     Color = SKColors.DarkCyan,
-                    StrokeWidth = 1.5f,
+                    StrokeWidth = graphWidth,
                     IsAntialias = true,
                     IsStroke = true,
                     Style = SKPaintStyle.Stroke
                 };
                 SKPath path = new();
                 float i = -w / 2;
-                path.MoveTo(scaleFactor * i + w / 2, -scaleFactor * expr.Evaluate(i) + h / 2);
-                const float increment = .01f;
-                List<SKPoint> points = new();
+                float py = h / 2;
                 for (; i < w / 2; i += increment)
+                    if (_expr.Evaluate(i) is float v)
+                    {
+                        py = v;
+                        break;
+                    }
+
+                path.MoveTo(new SKPoint(_scaleFactor * i + w / 2, -_scaleFactor * py + h / 2));
+                for (i = -w / 2; i < w / 2; i += increment)
                 {
-                    float x1 = scaleFactor * i + w / 2;
-                    float y1 = -scaleFactor * expr.Evaluate(i) + h / 2;
-                    points.Add(new(x1, y1));
+                    float? p_y = _expr.Evaluate(i), p_y1 = _expr.Evaluate(i + increment);
+                    if (p_y is float y && p_y1 is float y1)
+                    {
+                        float coord_y = -_scaleFactor * y + h / 2;
+                        float coord_y1 = -_scaleFactor * y1 + h / 2;
+                        if (coord_y == float.NegativeInfinity || coord_y1 == float.NegativeInfinity ||
+                            coord_y == float.PositiveInfinity || coord_y1 == float.PositiveInfinity)
+                            continue;
+
+                        float x1 = _scaleFactor * i + w / 2;
+                        float x2 = _scaleFactor * (i + increment) + w / 2;
+                        path.QuadTo(x1, coord_y, x2, coord_y1);
+                    }
                 }
 
-                path.AddPoly(points.ToArray());
                 canvas.DrawPath(path, paint);
+                path.Dispose();
+
+                paint = new()
+                {
+                    Color = SKColors.Red,
+                    StrokeWidth = graphWidth,
+                    IsAntialias = true,
+                    IsStroke = true,
+                    Style = SKPaintStyle.Stroke
+                };
+                if (_dx is not null)
+                {
+                    path = new();
+                    i = -w / 2;
+                    py = h / 2;
+                    for (; i < w / 2; i += increment)
+                        if (_dx.Evaluate(i) is float v)
+                        {
+                            py = v;
+                            break;
+                        }
+
+                    path.MoveTo(new SKPoint(_scaleFactor * i + w / 2, -_scaleFactor * py + h / 2));
+                    for (i = -w / 2; i < w / 2; i += increment)
+                    {
+                        float? p_y = _dx.Evaluate(i), p_y1 = _dx.Evaluate(i + increment);
+                        if (p_y is float y && p_y1 is float y1)
+                        {
+                            float coord_y = -_scaleFactor * y + h / 2;
+                            float coord_y1 = -_scaleFactor * y1 + h / 2;
+                            if (coord_y == float.NegativeInfinity || coord_y1 == float.NegativeInfinity ||
+                                coord_y == float.PositiveInfinity || coord_y1 == float.PositiveInfinity)
+                                continue;
+
+                            float x1 = _scaleFactor * i + w / 2;
+                            float x2 = _scaleFactor * (i + increment) + w / 2;
+                            path.QuadTo(x1, coord_y, x2, coord_y1);
+                        }
+                    }
+                }
+
+                canvas.DrawPath(path, paint);
+                path.Dispose();
                 canvas.Save();
             }
 
@@ -89,12 +155,18 @@ namespace MathShit
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            base.OnMouseWheel(e);
             if (e.Delta > 0)
-                scaleFactor *= 2;
+                _scaleFactor *= 1.5f;
             else
-                scaleFactor /= 2;
+                _scaleFactor /= 1.5f;
             DrawGraph();
+        }
+
+        protected void Txt_Fn_OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.Enter)
+                DrawGraph();
         }
     }
 }
