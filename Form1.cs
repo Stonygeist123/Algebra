@@ -6,7 +6,7 @@ namespace MathShit
 {
     public partial class Form1 : Form
     {
-        private float _scaleFactor = 100f;
+        private float _scaleFactor = 50f;
         private Expr? _expr = null, _dx = null;
         private bool _hasError = false;
         private const float increment = .01f, graphWidth = 1.5f;
@@ -160,7 +160,7 @@ namespace MathShit
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             if (e.Delta > 0)
-                _scaleFactor *= 1.5f;
+                _scaleFactor *= 1.25f;
             else
                 _scaleFactor /= 1.5f;
             DrawGraph();

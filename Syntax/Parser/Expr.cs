@@ -119,7 +119,7 @@ namespace MathShit.Syntax.Parser
             float? right = Right.Evaluate(param);
             if (left is null || right is null ||
                 (Op == TokenKind.Slash && right == 0f) ||
-                (Op == TokenKind.Power && left < 0 && 1f / right.Value % 2 == 0))
+                (Op == TokenKind.Power && left < 0 && right < 1 && right > 0 && 1f / right.Value % 2 == 0))
                 return null;
 
             float? res = Op switch
@@ -128,7 +128,7 @@ namespace MathShit.Syntax.Parser
                 TokenKind.Minus => left - right,
                 TokenKind.Star => left * right,
                 TokenKind.Slash => left / right,
-                TokenKind.Power => left < 0 ? -MathF.Pow(-left.Value, right.Value) : MathF.Pow(left.Value, right.Value),
+                TokenKind.Power => left < 0 && right < 1 && right > 0 && 1f / right.Value % 2 == 0 ? -MathF.Pow(-left.Value, right.Value) : MathF.Pow(left.Value, right.Value),
                 _ => null
             };
 
@@ -148,7 +148,7 @@ namespace MathShit.Syntax.Parser
                 TokenKind.Minus => new BinaryExpr(leftDx, TokenKind.Minus, rightDx),
                 TokenKind.Star => new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Plus, new BinaryExpr(Left, TokenKind.Star, rightDx)),
                 TokenKind.Slash => new BinaryExpr(new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Minus, new BinaryExpr(Left, TokenKind.Star, rightDx)), TokenKind.Slash, new BinaryExpr(Right, TokenKind.Power, new LiteralExpr(2))),
-                TokenKind.Power => new BinaryExpr(leftDx, TokenKind.Star, Right is LiteralExpr r && r.Value == 1 ? Left : new BinaryExpr(Right, TokenKind.Star, new BinaryExpr(Left, TokenKind.Power, new BinaryExpr(Right, TokenKind.Minus, new LiteralExpr(1))))),
+                TokenKind.Power => Left is LiteralExpr l ? new BinaryExpr(rightDx, TokenKind.Star, new BinaryExpr(this, TokenKind.Star, new FunctionExpr("ln", Left))) : new BinaryExpr(leftDx, TokenKind.Star, Right is LiteralExpr r && r.Value == 1 ? Left : new BinaryExpr(Right, TokenKind.Star, new BinaryExpr(Left, TokenKind.Power, new BinaryExpr(Right, TokenKind.Minus, new LiteralExpr(1))))),
                 _ => null
             })?.Simplify();
         }
@@ -165,6 +165,13 @@ namespace MathShit.Syntax.Parser
                     TokenKind.Power => MathF.Pow(l.Value, r.Value),
                     _ => 0f
                 });
+            else if ((Left is LiteralExpr || Right is LiteralExpr) && Op == TokenKind.Plus || Op == TokenKind.Minus)
+            {
+                if (Left is LiteralExpr l1 && l1.Value == 0)
+                    return Right;
+                else if (Right is LiteralExpr r1 && r1.Value == 0)
+                    return Left;
+            }
             else if (Op == TokenKind.Star)
             {
                 if (Left is LiteralExpr l1 && l1.Value == 1)
@@ -175,21 +182,36 @@ namespace MathShit.Syntax.Parser
                     return new LiteralExpr(0);
                 else if (Right is LiteralExpr r2 && r2.Value == 0)
                     return new LiteralExpr(0);
+                else if (Left is LiteralExpr l3 && Right is BinaryExpr br && br.Op == TokenKind.Star)
+                {
+                    if (br.Left is LiteralExpr l4)
+                        return new BinaryExpr(new LiteralExpr(l3.Value * l4.Value), TokenKind.Star, br.Right);
+                    else if (br.Right is LiteralExpr l5)
+                        return new BinaryExpr(new LiteralExpr(l3.Value * l5.Value), TokenKind.Star, br.Left);
+                    return new BinaryExpr(Left, Op, new GroupingExpr(Right));
+                }
+                else if (Right is LiteralExpr l4 && Left is BinaryExpr bl && bl.Op == TokenKind.Star)
+                {
+                    if (bl.Left is LiteralExpr l5)
+                        return new BinaryExpr(new LiteralExpr(l4.Value * l5.Value), TokenKind.Star, bl.Right);
+                    else if (bl.Right is LiteralExpr l6)
+                        return new BinaryExpr(new LiteralExpr(l4.Value * l6.Value), TokenKind.Star, bl.Left);
+                    return new BinaryExpr(new GroupingExpr(Left), Op, Right);
+                }
             }
             else if (Op == TokenKind.Slash)
             {
                 if (Left is LiteralExpr l1 && l1.Value == 0)
                     return new LiteralExpr(0);
+                else if (Left is LiteralExpr && Right is BinaryExpr b && b.Op == TokenKind.Slash && b.Left is LiteralExpr l2 && l2.Value == 1)
+                    return new BinaryExpr(Left, TokenKind.Slash, b.Right).Simplify();
                 else if (Right is LiteralExpr r1 && r1.Value == 1)
                     return Left;
+                else if (Right is LiteralExpr && Left is BinaryExpr b1 && b1.Op == TokenKind.Slash && b1.Left is LiteralExpr l3 && l3.Value == 1)
+                    return new BinaryExpr(Right, TokenKind.Slash, b1.Right).Simplify();
             }
-            else if (Op == TokenKind.Plus)
-            {
-                if (Left is LiteralExpr l1 && l1.Value == 0)
-                    return Right;
-                else if (Right is LiteralExpr r1 && r1.Value == 0)
-                    return Left;
-            }
+            else if (Op == TokenKind.Power && Right is LiteralExpr l1 && l1.Value == 1)
+                return Left;
             else if (Left is BinaryExpr)
                 return Right is BinaryExpr
                     ? new BinaryExpr(new GroupingExpr(Left), Op, new GroupingExpr(Right))
@@ -202,7 +224,7 @@ namespace MathShit.Syntax.Parser
             return new BinaryExpr(Left, Op, Right);
         }
 
-        public override string ToString() => Left.ToString() + (Op switch
+        public override string ToString() => Left.ToString() + (Op == TokenKind.Star && (Right is NameExpr && Left is LiteralExpr || Right is GroupingExpr) ? "" : Op switch
         {
             TokenKind.Plus => " + ",
             TokenKind.Minus => " - ",
@@ -210,7 +232,7 @@ namespace MathShit.Syntax.Parser
             TokenKind.Slash => "/",
             TokenKind.Power => "^",
             _ => ""
-        }) + Right.ToString();
+        }) + (Op == TokenKind.Power ? "(" + Right.ToString() + ")" : Right.ToString());
     }
 
     public class FunctionExpr : Expr
@@ -232,7 +254,7 @@ namespace MathShit.Syntax.Parser
             Arg = arg;
         }
 
-        public override float? Evaluate(float param) => Fn(param);
+        public override float? Evaluate(float param) => Fn(Arg.Evaluate(param) ?? 0f);
         public override Expr? Derivative()
         {
             Expr? arg = Arg.Derivative()?.Simplify();

@@ -19,7 +19,8 @@ namespace MathShit.Miscellaneous
             { "acsc", x => MathF.Asin(1 / x) },
             { "acot", x => MathF.Atan(1 / x) },
             { "abs", MathF.Abs },
-            { "sgn", x => MathF.Sign(x) }
+            { "sgn", x => MathF.Sign(x) },
+            { "ln",  MathF.Log }
         };
 
         public static Expr FnsDerivs(string name, Expr arg)
@@ -40,6 +41,7 @@ namespace MathShit.Miscellaneous
                 "acot" => new UnaryExpr(TokenKind.Minus, new BinaryExpr(new LiteralExpr(1), TokenKind.Slash, new BinaryExpr(new LiteralExpr(1), TokenKind.Plus, new BinaryExpr(arg, TokenKind.Power, new LiteralExpr(2))))),
                 "abs" => new FunctionExpr("sgn", arg),
                 "sgn" => new LiteralExpr(0),
+                "ln" => new BinaryExpr(new LiteralExpr(1), TokenKind.Slash, arg),
                 _ => new ErrorExpr()
             };
         }
