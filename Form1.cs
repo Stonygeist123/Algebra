@@ -7,6 +7,7 @@ namespace Algebra
     public partial class Form1 : Form
     {
         private float _scaleFactor = 50f;
+        private const float _xAxisCount = 5, _yAxisCount = 5;
         private Expr? _expr = null, _dx = null;
         private bool _hasError = false;
         private const float increment = .01f, graphWidth = 1.5f;
@@ -49,21 +50,61 @@ namespace Algebra
             SKSurface surface = SKSurface.Create(imgInfo);
             SKCanvas canvas = surface.Canvas;
             canvas.Clear();
-            SKPaint paint = new()
+            SKPaint mainPaint = new()
             {
                 Color = SKColors.Black,
                 StrokeWidth = 4,
                 IsAntialias = true
+            }, textPaint = new()
+            {
+                Color = SKColors.Black,
+                StrokeWidth = 1.25f,
+                IsAntialias = true,
+                IsStroke = true
             };
 
-            canvas.DrawLine(new(0, h / 2), new(w, h / 2), paint);
-            canvas.Save();
-            canvas.DrawLine(new(w / 2, 0), new(w / 2, h), paint);
-            canvas.Save();
+            canvas.DrawLine(new(0, h / 2), new(w, h / 2), mainPaint);
+            canvas.DrawLine(new(w / 2, 0), new(w / 2, h), mainPaint);
+
+            mainPaint.Color = SKColors.DarkGray;
+            mainPaint.StrokeWidth = 2;
+            /* x-Axis */
+            for (float n = 0; n < w / 2; n += w / 2 / _xAxisCount)
+            {
+                float x = n + w / 2;
+                canvas.DrawLine(new(x, h / 2 + 15), new(x, h / 2 - 15), mainPaint);
+                if (n != 0)
+                    canvas.DrawText($"{n / _scaleFactor}", new(x + 5, h / 2 - 25), textPaint);
+                else
+                    canvas.DrawText($"{n / _scaleFactor}", new(x + 5, h / 2 - 5), textPaint);
+            }
+
+            for (float n = w / 2 / _xAxisCount; n < w / 2; n += w / 2 / _xAxisCount)
+            {
+                float x = (w / 2) - n;
+                canvas.DrawLine(new(x, h / 2 + 15), new(x, h / 2 - 15), mainPaint);
+                canvas.DrawText($"{-(n / _scaleFactor)}", new(x + 5, h / 2 - 25), textPaint);
+            }
+
+            /* y-Axis */
+            for (float n = 0; n < h / 2; n += h / 2 / _yAxisCount)
+            {
+                float y = n + h / 2;
+                canvas.DrawLine(new(w / 2 - 15, y), new(w / 2 + 15, y), mainPaint);
+                if (n != 0)
+                    canvas.DrawText($"{-(n / _scaleFactor)}", new(w / 2 + 20, y + 4.5f), textPaint);
+            }
+
+            for (float n = h / 2 / _yAxisCount; n < w / 2; n += h / 2 / _yAxisCount)
+            {
+                float y = (h / 2) - n;
+                canvas.DrawLine(new(w / 2 - 15, y), new(w / 2 + 15, y), mainPaint);
+                canvas.DrawText($"{(n / _scaleFactor)}", new(w / 2 + 20, y + 4.5f), textPaint);
+            }
 
             if (!_hasError && _expr is not null)
             {
-                paint = new()
+                mainPaint = new()
                 {
                     Color = SKColors.DarkCyan,
                     StrokeWidth = graphWidth,
@@ -98,11 +139,11 @@ namespace Algebra
                     }
                 }
 
-                canvas.DrawPath(path, paint);
+                canvas.DrawPath(path, mainPaint);
                 path.Dispose();
                 if (_dx is not null)
                 {
-                    paint = new()
+                    mainPaint = new()
                     {
                         Color = SKColors.Red,
                         StrokeWidth = graphWidth,
@@ -139,7 +180,7 @@ namespace Algebra
                     }
                 }
 
-                canvas.DrawPath(path, paint);
+                canvas.DrawPath(path, mainPaint);
                 path.Dispose();
                 canvas.Save();
             }
@@ -160,7 +201,7 @@ namespace Algebra
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             if (e.Delta > 0)
-                _scaleFactor *= 1.25f;
+                _scaleFactor *= 1.5f;
             else
                 _scaleFactor /= 1.5f;
             DrawGraph();
