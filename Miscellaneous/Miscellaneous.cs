@@ -1,4 +1,4 @@
-﻿namespace MathShit.Miscellaneous
+﻿namespace Algebra.Miscellaneous
 {
     public readonly struct TextSpan
     {

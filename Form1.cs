@@ -1,8 +1,8 @@
-using MathShit.Syntax.Lexer;
-using MathShit.Syntax.Parser;
+using Algebra.Syntax.Lexer;
+using Algebra.Syntax.Parser;
 using SkiaSharp;
 
-namespace MathShit
+namespace Algebra
 {
     public partial class Form1 : Form
     {

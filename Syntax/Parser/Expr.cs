@@ -1,8 +1,8 @@
-﻿using MathShit.Miscellaneous;
-using MathShit.Syntax.Lexer;
+﻿using Algebra.Miscellaneous;
+using Algebra.Syntax.Lexer;
 using System.Globalization;
 
-namespace MathShit.Syntax.Parser
+namespace Algebra.Syntax.Parser
 {
     public abstract class Expr
     {

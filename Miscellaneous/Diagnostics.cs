@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace MathShit.Miscellaneous
+namespace Algebra.Miscellaneous
 {
     internal class DiagnosticBag : IEnumerable<Diagnostic>
     {

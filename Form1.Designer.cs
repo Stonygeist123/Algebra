@@ -1,4 +1,4 @@
-﻿namespace MathShit
+﻿namespace Algebra
 {
     partial class Form1
     {

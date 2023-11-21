@@ -1,7 +1,7 @@
-﻿using MathShit.Miscellaneous;
-using MathShit.Syntax.Lexer;
+﻿using Algebra.Miscellaneous;
+using Algebra.Syntax.Lexer;
 
-namespace MathShit.Syntax.Parser
+namespace Algebra.Syntax.Parser
 {
     internal class Parser
     {

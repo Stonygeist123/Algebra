@@ -1,7 +1,7 @@
-﻿using MathShit.Syntax.Lexer;
-using MathShit.Syntax.Parser;
+﻿using Algebra.Syntax.Lexer;
+using Algebra.Syntax.Parser;
 
-namespace MathShit.Miscellaneous
+namespace Algebra.Miscellaneous
 {
     public static class BuiltIns
     {

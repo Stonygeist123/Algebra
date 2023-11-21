@@ -1,6 +1,6 @@
-﻿using MathShit.Miscellaneous;
+﻿using Algebra.Miscellaneous;
 
-namespace MathShit.Syntax.Lexer
+namespace Algebra.Syntax.Lexer
 {
     public enum TokenKind
     {
