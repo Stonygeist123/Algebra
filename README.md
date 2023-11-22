@@ -1,1 +1,1 @@
-# Geogebra 2.0
+# Algebra
