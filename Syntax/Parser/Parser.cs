@@ -7,9 +7,15 @@ namespace Algebra.Syntax.Parser
     {
         private readonly Token[] _tokens;
         private int _current = 0;
-        private readonly DiagnosticBag _diagnostics = new();
+        private readonly List<Diagnostic> _diagnostics = new();
+        private readonly bool _graph;
         public Diagnostic[] Diagnostics => _diagnostics.ToArray();
-        public Parser(Token[] tokens) => _tokens = tokens.ToArray();
+        public Parser(Token[] tokens, bool graph = true)
+        {
+            _tokens = tokens.ToArray();
+            _graph = graph;
+        }
+
         public Expr Parse() => ParseExpr();
         private Expr ParseExpr(int parentPrecedence = 0)
         {
@@ -20,8 +26,8 @@ namespace Algebra.Syntax.Parser
                 case TokenKind.Number:
                     return CheckExtension(new LiteralExpr(t), parentPrecedence);
                 case TokenKind.Name:
-                    if (t.Lexeme != "x" && !BuiltIns.Constants.Any(c => c.Key == t.Lexeme) && !BuiltIns.Fns.ContainsKey(t.Lexeme))
-                        _diagnostics.Add($"Constant variables are not supported yet.", t.Span);
+                    if (!BuiltIns.Constants.Any(c => c.Key == t.Lexeme) && !BuiltIns.Fns.ContainsKey(t.Lexeme) && (!_graph || _graph && t.Lexeme != "x"))
+                        _diagnostics.Add(new($"Constant variables are not supported yet.", t.Span));
                     return CheckExtension(new NameExpr(t.Lexeme), parentPrecedence);
                 case TokenKind.LParen:
                     return CheckExtension(GetGrouping(), parentPrecedence);
@@ -30,7 +36,7 @@ namespace Algebra.Syntax.Parser
                 case TokenKind.Minus:
                     return CheckExtension(GetUnary(t), parentPrecedence);
                 default:
-                    _diagnostics.Add($"Unknown expression.", t.Span);
+                    _diagnostics.Add(new($"Unknown expression.", t.Span));
                     return new ErrorExpr();
             };
         }
@@ -43,7 +49,7 @@ namespace Algebra.Syntax.Parser
             if (rParen.Kind == TokenKind.RParen)
                 return new GroupingExpr(expr);
 
-            _diagnostics.Add($"Expected \")\".", rParen.Span);
+            _diagnostics.Add(new($"Expected \")\".", rParen.Span));
             return new ErrorExpr();
         }
 
@@ -55,7 +61,7 @@ namespace Algebra.Syntax.Parser
             if (rPipe.Kind == TokenKind.Pipe)
                 return new AbsExpr(expr);
 
-            _diagnostics.Add($"Expected \"|\".", rPipe.Span);
+            _diagnostics.Add(new($"Expected \"|\".", rPipe.Span));
             return new ErrorExpr();
         }
 
@@ -100,7 +106,7 @@ namespace Algebra.Syntax.Parser
                     Token rParen = Current;
                     if (rParen.Kind != TokenKind.RParen)
                     {
-                        _diagnostics.Add($"Expected ')'.", t.Span);
+                        _diagnostics.Add(new($"Expected ')'.", t.Span));
                         return new ErrorExpr();
                     }
 
@@ -112,7 +118,7 @@ namespace Algebra.Syntax.Parser
                     Token rParen = Current;
                     if (Current.Kind != TokenKind.RParen)
                     {
-                        _diagnostics.Add($"Expected ')'.", t.Span);
+                        _diagnostics.Add(new($"Expected ')'.", t.Span));
                         return new ErrorExpr();
                     }
 
@@ -124,12 +130,12 @@ namespace Algebra.Syntax.Parser
             else if (t.Kind == TokenKind.Name)
             {
                 Advance();
-                if (t.Lexeme != "x" && !BuiltIns.Constants.Any(c => c.Key == t.Lexeme))
-                    _diagnostics.Add($"Constant variables are not supported yet.", t.Span);
+                if ((!_graph || _graph && t.Lexeme != "x") && !BuiltIns.Constants.Any(c => c.Key == t.Lexeme))
+                    _diagnostics.Add(new($"Constant variables are not supported yet.", t.Span));
                 return CheckExtension(new BinaryExpr(expr, TokenKind.Star, CheckExtension(new NameExpr(t.Lexeme), OperaterPrecedence(TokenKind.Star))), parentPrecedence);
             }
-            else if (expr is NameExpr n && n.Name != "x" && !BuiltIns.Constants.Any(c => c.Key == n.Name))
-                _diagnostics.Add($"Constant variables are not supported yet.", t.Span);
+            else if (expr is NameExpr n && (!_graph || _graph && n.Name != "x") && !BuiltIns.Constants.Any(c => c.Key == n.Name))
+                _diagnostics.Add(new($"Constant variables are not supported yet.", t.Span));
 
             return expr;
         }

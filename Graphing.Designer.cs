@@ -1,6 +1,6 @@
 ﻿namespace Algebra
 {
-    partial class Form1
+    partial class Graphing
     {
         /// <summary>
         ///  Required designer variable.

@@ -5,29 +5,29 @@ namespace Algebra.Miscellaneous
 {
     public static class BuiltIns
     {
-        public static Dictionary<string, Func<float, float>> Fns => new() {
-            { "sin", MathF.Sin },
-            { "cos", MathF.Cos },
-            { "tan", MathF.Tan },
-            { "asin", MathF.Asin },
-            { "acos", MathF.Acos },
-            { "atan", MathF.Atan },
-            { "sec", x => 1 / MathF.Cos(x) },
-            { "csc", x => 1 / MathF.Sin(x) },
-            { "cot", x => MathF.Cos(x)/  MathF.Sin(x) },
-            { "asec", x => MathF.Acos(1 / x) },
-            { "acsc", x => MathF.Asin(1 / x) },
-            { "acot", x => MathF.Atan(1 / x) },
-            { "abs", MathF.Abs },
-            { "sgn", x => MathF.Sign(x) },
-            { "ln",  MathF.Log }
+        public static Dictionary<string, Func<double, double>> Fns => new() {
+            { "sin", Math.Sin },
+            { "cos", Math.Cos },
+            { "tan", Math.Tan },
+            { "asin", Math.Asin },
+            { "acos", Math.Acos },
+            { "atan", Math.Atan },
+            { "sec", x => 1 / Math.Cos(x) },
+            { "csc", x => 1 / Math.Sin(x) },
+            { "cot", x => Math.Cos(x)/  Math.Sin(x) },
+            { "asec", x => Math.Acos(1 / x) },
+            { "acsc", x => Math.Asin(1 / x) },
+            { "acot", x => Math.Atan(1 / x) },
+            { "abs", Math.Abs },
+            { "sgn", x => Math.Sign(x) },
+            { "ln",  Math.Log }
         };
 
         public static Expr FnsDerivs(string name, Expr arg)
         {
             return name switch
             {
-                "sin" => new FunctionExpr(MathF.Cos, "cos", arg),
+                "sin" => new FunctionExpr("cos", arg),
                 "cos" => new UnaryExpr(TokenKind.Minus, new FunctionExpr("sin", arg)),
                 "tan" => new BinaryExpr(new FunctionExpr("sec", arg), TokenKind.Power, new LiteralExpr(2)),
                 "asin" => new BinaryExpr(new LiteralExpr(1), TokenKind.Slash, new BinaryExpr(new BinaryExpr(new LiteralExpr(1), TokenKind.Minus, new BinaryExpr(arg, TokenKind.Power, new LiteralExpr(2))), TokenKind.Power, new LiteralExpr(.5f))),
@@ -46,9 +46,9 @@ namespace Algebra.Miscellaneous
             };
         }
 
-        public static Dictionary<string, float> Constants => new() {
-            { "pi", MathF.PI },
-            { "e", MathF.E }
+        public static Dictionary<string, double> Constants => new() {
+            { "pi", Math.PI },
+            { "e", Math.E }
         };
     }
 }

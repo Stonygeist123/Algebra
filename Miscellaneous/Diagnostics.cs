@@ -1,17 +1,5 @@
-﻿using System.Collections;
-
-namespace Algebra.Miscellaneous
+﻿namespace Algebra.Miscellaneous
 {
-    internal class DiagnosticBag : IEnumerable<Diagnostic>
-    {
-        private readonly List<Diagnostic> _diagnostics = new();
-        public Diagnostic[] Diagnostics { get => _diagnostics.ToArray(); }
-        public void Add(Diagnostic diagnostic) => _diagnostics.Add(diagnostic);
-        public void Add(string message, TextSpan span) => _diagnostics.Add(new(message, span));
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        public IEnumerator<Diagnostic> GetEnumerator() => _diagnostics.GetEnumerator();
-    }
-
     internal readonly struct Diagnostic
     {
         public Diagnostic(string message, TextSpan span)

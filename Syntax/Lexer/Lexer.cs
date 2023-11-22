@@ -7,7 +7,7 @@ namespace Algebra.Syntax.Lexer
         private readonly string _fn;
         private readonly List<Token> _tokens = new();
         private int _current = 0, _start = 0;
-        private readonly DiagnosticBag _diagnostics = new();
+        private readonly List<Diagnostic> _diagnostics = new();
         public Diagnostic[] Diagnostics => _diagnostics.ToArray();
         public Lexer(string fn) => _fn = fn;
         public Token[] Lex()
@@ -71,7 +71,7 @@ namespace Algebra.Syntax.Lexer
                         return;
                     }
                     else
-                        _diagnostics.Add($"Unknown character '{c}'.", Span);
+                        _diagnostics.Add(new($"Unknown character '{c}'.", Span));
                     break;
             }
 
@@ -92,7 +92,7 @@ namespace Algebra.Syntax.Lexer
                 lexeme += Current;
                 Advance();
                 if (!char.IsDigit(Current))
-                    _diagnostics.Add($"Malformed number.", Span);
+                    _diagnostics.Add(new($"Malformed number.", Span));
 
                 while (!IsAtEnd() && char.IsDigit(Current))
                 {

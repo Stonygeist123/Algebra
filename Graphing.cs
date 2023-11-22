@@ -4,20 +4,15 @@ using SkiaSharp;
 
 namespace Algebra
 {
-    public partial class Form1 : Form
+    public partial class Graphing : Form
     {
         private float _scaleFactor = 50f;
         private const float _xAxisCount = 5, _yAxisCount = 5;
         private Expr? _expr = null, _dx = null;
         private bool _hasError = false;
         private const float increment = .01f, graphWidth = 1.5f;
-        public Form1() => InitializeComponent();
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            Img_Graph.SizeMode = PictureBoxSizeMode.Zoom;
-            DrawGraph();
-        }
-
+        public Graphing() => InitializeComponent();
+        private void Form1_Load(object sender, EventArgs e) => DrawGraph();
         private void Btn_Graph_Click(object sender, EventArgs e)
         {
             Analyse();
