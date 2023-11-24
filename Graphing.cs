@@ -10,7 +10,7 @@ namespace Algebra
         private const float _xAxisCount = 5, _yAxisCount = 5;
         private Expr? _expr = null, _dx = null;
         private bool _hasError = false;
-        private const float increment = .01f, graphWidth = 1.5f;
+        private const float increment = .5f, graphWidth = 1.5f;
         public Graphing() => InitializeComponent();
         private void Form1_Load(object sender, EventArgs e) => DrawGraph();
         private void Btn_Graph_Click(object sender, EventArgs e)
@@ -29,7 +29,7 @@ namespace Algebra
                 Parser parser = new(tokens);
                 _expr = parser.Parse().Simplify();
                 _dx = _expr.Derivative();
-                Txt_Dx.Text = "f'(x) = " + _dx?.ToString() ?? "";
+                Txt_Dx.Text = "f'(x) = " + _dx?.ToString() ?? "None";
                 _hasError = parser.Diagnostics.Any();
             }
         }
@@ -107,11 +107,13 @@ namespace Algebra
                     IsStroke = true,
                     Style = SKPaintStyle.Stroke
                 };
+
+                Dictionary<string, float> symbols = new();
                 SKPath path = new();
                 float i = -w / 2;
                 float py = h / 2;
                 for (; i < w / 2; i += increment)
-                    if (_expr.Evaluate(i) is float v && !float.IsNaN(v) && float.IsFinite(v))
+                    if (_expr.Evaluate(symbols, i) is float v && !float.IsNaN(v) && float.IsFinite(v))
                     {
                         py = v;
                         break;
@@ -120,12 +122,12 @@ namespace Algebra
                 path.MoveTo(new SKPoint(i + w / 2, -py + h / 2));
                 for (i = -w / 2; i < w / 2; i += increment)
                 {
-                    float? p_y = _expr.Evaluate(i), p_y1 = _expr.Evaluate(i + increment);
+                    float? p_y = _expr.Evaluate(symbols, i), p_y1 = _expr.Evaluate(symbols, i + increment);
                     if (p_y is float y && p_y1 is float y1 && !float.IsNaN(y) && !float.IsNaN(y1) && float.IsFinite(y) && float.IsFinite(y1))
                     {
                         float coord_y = -_scaleFactor * y + h / 2;
                         float coord_y1 = -_scaleFactor * y1 + h / 2;
-                        if (float.IsInfinity(coord_y) || float.IsInfinity(coord_y))
+                        if (float.IsInfinity(coord_y) || float.IsInfinity(coord_y1))
                             continue;
 
                         float x1 = _scaleFactor * i + w / 2;
@@ -151,7 +153,7 @@ namespace Algebra
                     i = -w / 2;
                     py = h / 2;
                     for (; i < w / 2; i += increment)
-                        if (_dx.Evaluate(i) is float v && !float.IsNaN(v) && float.IsFinite(v))
+                        if (_dx.Evaluate(symbols, i) is float v && !float.IsNaN(v) && float.IsFinite(v))
                         {
                             py = v;
                             break;
@@ -160,7 +162,7 @@ namespace Algebra
                     path.MoveTo(new SKPoint(_scaleFactor * i + w / 2, -_scaleFactor * py + h / 2));
                     for (i = -w / 2; i < w / 2; i += increment)
                     {
-                        float? p_y = _dx.Evaluate(i), p_y1 = _dx.Evaluate(i + increment);
+                        float? p_y = _dx.Evaluate(symbols, i), p_y1 = _dx.Evaluate(symbols, i + increment);
                         if (p_y is float y && p_y1 is float y1 && !float.IsNaN(y) && !float.IsNaN(y1) && float.IsFinite(y) && float.IsFinite(y1))
                         {
                             float coord_y = -_scaleFactor * y + h / 2;
@@ -173,10 +175,11 @@ namespace Algebra
                             path.QuadTo(x1, coord_y, x2, coord_y1);
                         }
                     }
+
+                    canvas.DrawPath(path, mainPaint);
+                    path.Dispose();
                 }
 
-                canvas.DrawPath(path, mainPaint);
-                path.Dispose();
                 canvas.Save();
             }
 

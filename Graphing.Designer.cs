@@ -85,7 +85,7 @@
             Txt_Dx.TabIndex = 6;
             Txt_Dx.Text = "f'(x) = ";
             // 
-            // Form1
+            // Graphing
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -96,8 +96,8 @@
             Controls.Add(Btn_Graph);
             Controls.Add(label1);
             Controls.Add(Txt_Fn);
-            Name = "Form1";
-            Text = "Geogebra 2.0 ";
+            Name = "Graphing";
+            Text = "Algebra";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)Img_Graph).EndInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).EndInit();

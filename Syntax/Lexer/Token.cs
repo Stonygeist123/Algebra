@@ -7,15 +7,22 @@ namespace Algebra.Syntax.Lexer
         Number, Name,
 
         Plus, Minus, Star, Slash, Power,
-        LParen, RParen,
+        LParen, RParen, Pipe,
 
-        Pipe,
+        Comma, Eq, Bang,
+
+        /* Keywords */
+        Sigma,
 
         Bad, EOF
     }
 
     public class Token
     {
+        public readonly static Dictionary<string, TokenKind> Keywords = new()
+        {
+            { "sigma", TokenKind.Sigma },
+        };
         public TokenKind Kind { get; }
         public string Lexeme { get; }
         public TextSpan Span { get; }

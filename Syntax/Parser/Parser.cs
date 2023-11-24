@@ -9,6 +9,7 @@ namespace Algebra.Syntax.Parser
         private int _current = 0;
         private readonly List<Diagnostic> _diagnostics = new();
         private readonly bool _graph;
+        private readonly List<string> _symbols = new();
         public Diagnostic[] Diagnostics => _diagnostics.ToArray();
         public Parser(Token[] tokens, bool graph = true)
         {
@@ -34,11 +35,66 @@ namespace Algebra.Syntax.Parser
                 case TokenKind.Pipe:
                     return CheckExtension(GetPipe(), parentPrecedence);
                 case TokenKind.Minus:
+                case TokenKind.Bang:
                     return CheckExtension(GetUnary(t), parentPrecedence);
+                case TokenKind.Sigma:
+                    return CheckExtension(GetSigma(), parentPrecedence);
                 default:
                     _diagnostics.Add(new($"Unknown expression.", t.Span));
                     return new ErrorExpr();
             };
+        }
+
+        private Expr GetSigma()
+        {
+            if (Current.Kind != TokenKind.LParen)
+            {
+                _diagnostics.Add(new($"Expected \"(\".", Current.Span));
+                return new ErrorExpr();
+            }
+
+            Advance();
+            Token id = Current;
+            if (_symbols.Contains(id.Lexeme))
+            {
+                _diagnostics.Add(new($"\"{id.Lexeme}\" was already defined.", id.Span));
+                return new ErrorExpr();
+            }
+
+            Advance();
+            if (Current.Kind != TokenKind.Eq)
+            {
+                _diagnostics.Add(new($"Expected \"=\".", Current.Span));
+                return new ErrorExpr();
+            }
+
+            Advance();
+            Expr start = ParseExpr();
+            if (Current.Kind != TokenKind.Comma)
+            {
+                _diagnostics.Add(new($"Expected \",\".", Current.Span));
+                return new ErrorExpr();
+            }
+
+            Advance();
+            Expr end = ParseExpr();
+            if (Current.Kind != TokenKind.Comma)
+            {
+                _diagnostics.Add(new($"Expected \",\".", Current.Span));
+                return new ErrorExpr();
+            }
+
+            Advance();
+            _symbols.Add(id.Lexeme);
+            Expr expr = ParseExpr();
+            _symbols.RemoveAt(_symbols.Count - 1);
+            Token rParen = Current;
+            Advance();
+            if (rParen.Kind == TokenKind.RParen)
+                return new SigmaExpr(id.Lexeme, start, end, expr);
+
+            _diagnostics.Add(new($"Expected \")\".", rParen.Span));
+            return new ErrorExpr();
         }
 
         private Expr GetGrouping()
@@ -65,10 +121,10 @@ namespace Algebra.Syntax.Parser
             return new ErrorExpr();
         }
 
-        private Expr GetUnary(Token minus)
+        private Expr GetUnary(Token op)
         {
             Expr expr = ParseExpr();
-            return new UnaryExpr(minus.Kind, expr);
+            return new UnaryExpr(op.Kind, expr);
         }
 
         private Expr CheckExtension(Expr expr, int parentPrecedence = 0)

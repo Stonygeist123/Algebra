@@ -54,6 +54,15 @@ namespace Algebra.Syntax.Lexer
                 case '|':
                     kind = TokenKind.Pipe;
                     break;
+                case ',':
+                    kind = TokenKind.Comma;
+                    break;
+                case '=':
+                    kind = TokenKind.Eq;
+                    break;
+                case '!':
+                    kind = TokenKind.Bang;
+                    break;
                 case ' ':
                 case '\t':
                 case '\n':
@@ -113,7 +122,10 @@ namespace Algebra.Syntax.Lexer
                 Advance();
             }
 
-            _tokens.Add(new(TokenKind.Name, lexeme, Span));
+            if (Token.Keywords.TryGetValue(lexeme, out TokenKind t))
+                _tokens.Add(new(t, lexeme, Span));
+            else
+                _tokens.Add(new(TokenKind.Name, lexeme, Span));
         }
 
         private bool IsAtEnd() => _current >= _fn.Length;

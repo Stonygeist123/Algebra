@@ -8,7 +8,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<StartupObject>Algebra.Program</StartupObject>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<RepositoryUrl>https://github.com/Stonygeist123/Geogebra-2.0</RepositoryUrl>
+		<RepositoryUrl>https://github.com/Stonygeist123/Algebra</RepositoryUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
