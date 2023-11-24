@@ -36,7 +36,7 @@ namespace Algebra.Syntax.Parser
         public string Name { get; }
         public bool Param => Name == "x";
         public NameExpr(string name) => Name = name;
-        public override float Evaluate(Dictionary<string, float> symbols, float param) => Param ? param : (float)BuiltIns.Constants[Name];
+        public override float Evaluate(Dictionary<string, float> symbols, float param) => Param ? param : symbols[Name];
         public override Expr? Derivative() => new LiteralExpr(Param ? 1 : 0);
         public override Expr Simplify() => this;
         public override string ToString() => Name;

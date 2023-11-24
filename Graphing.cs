@@ -1,3 +1,4 @@
+using Algebra.Miscellaneous;
 using Algebra.Syntax.Lexer;
 using Algebra.Syntax.Parser;
 using SkiaSharp;
@@ -108,7 +109,7 @@ namespace Algebra
                     Style = SKPaintStyle.Stroke
                 };
 
-                Dictionary<string, float> symbols = new();
+                Dictionary<string, float> symbols = BuiltIns.Constants;
                 SKPath path = new();
                 float i = -w / 2;
                 float py = h / 2;

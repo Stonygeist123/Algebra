@@ -9,7 +9,7 @@ namespace Algebra.Syntax.Parser
         private int _current = 0;
         private readonly List<Diagnostic> _diagnostics = new();
         private readonly bool _graph;
-        private readonly List<string> _symbols = new();
+        private readonly List<string> _symbols = BuiltIns.Constants.Select(kv => kv.Key).ToList();
         public Diagnostic[] Diagnostics => _diagnostics.ToArray();
         public Parser(Token[] tokens, bool graph = true)
         {
@@ -27,8 +27,8 @@ namespace Algebra.Syntax.Parser
                 case TokenKind.Number:
                     return CheckExtension(new LiteralExpr(t), parentPrecedence);
                 case TokenKind.Name:
-                    if (!BuiltIns.Constants.Any(c => c.Key == t.Lexeme) && !BuiltIns.Fns.ContainsKey(t.Lexeme) && (!_graph || _graph && t.Lexeme != "x"))
-                        _diagnostics.Add(new($"Constant variables are not supported yet.", t.Span));
+                    if (!_symbols.Contains(t.Lexeme) && !BuiltIns.Fns.ContainsKey(t.Lexeme) && (!_graph || _graph && t.Lexeme != "x"))
+                        _diagnostics.Add(new($"Variables are not supported yet.", t.Span));
                     return CheckExtension(new NameExpr(t.Lexeme), parentPrecedence);
                 case TokenKind.LParen:
                     return CheckExtension(GetGrouping(), parentPrecedence);
@@ -186,12 +186,12 @@ namespace Algebra.Syntax.Parser
             else if (t.Kind == TokenKind.Name)
             {
                 Advance();
-                if ((!_graph || _graph && t.Lexeme != "x") && !BuiltIns.Constants.Any(c => c.Key == t.Lexeme))
-                    _diagnostics.Add(new($"Constant variables are not supported yet.", t.Span));
+                if ((!_graph || _graph && t.Lexeme != "x") && !_symbols.Contains(t.Lexeme))
+                    _diagnostics.Add(new($"Variables are not supported yet.", t.Span));
                 return CheckExtension(new BinaryExpr(expr, TokenKind.Star, CheckExtension(new NameExpr(t.Lexeme), OperaterPrecedence(TokenKind.Star))), parentPrecedence);
             }
-            else if (expr is NameExpr n && (!_graph || _graph && n.Name != "x") && !BuiltIns.Constants.Any(c => c.Key == n.Name))
-                _diagnostics.Add(new($"Constant variables are not supported yet.", t.Span));
+            else if (expr is NameExpr n && (!_graph || _graph && n.Name != "x") && !_symbols.Contains(n.Name))
+                _diagnostics.Add(new($"Variables are not supported yet.", t.Span));
 
             return expr;
         }
