@@ -29,7 +29,13 @@ namespace Algebra.Syntax.Parser
                 case TokenKind.Name:
                     if (!_symbols.Contains(t.Lexeme) && !BuiltIns.Fns.ContainsKey(t.Lexeme) && (!_graph || _graph && t.Lexeme != "x"))
                         _diagnostics.Add(new($"Variables are not supported yet.", t.Span));
-                    return CheckExtension(new NameExpr(t.Lexeme), parentPrecedence);
+                    if (Current.Kind == TokenKind.LParen)
+                    {
+                        Advance();
+                        return CheckExtension(GetFunction(t.Lexeme), parentPrecedence);
+                    }
+                    else
+                        return CheckExtension(new NameExpr(t.Lexeme), parentPrecedence);
                 case TokenKind.LParen:
                     return CheckExtension(GetGrouping(), parentPrecedence);
                 case TokenKind.Pipe:
@@ -43,6 +49,19 @@ namespace Algebra.Syntax.Parser
                     _diagnostics.Add(new($"Unknown expression.", t.Span));
                     return new ErrorExpr();
             };
+        }
+
+        private Expr GetFunction(string lexeme)
+        {
+            Expr arg = ParseExpr();
+            Token rParen = Current;
+            if (rParen.Kind != TokenKind.RParen)
+            {
+                _diagnostics.Add(new($"Expected ')'.", rParen.Span));
+                return new ErrorExpr();
+            }
+
+            return CheckExtension(new FunctionExpr(lexeme, arg));
         }
 
         private Expr GetSigma()

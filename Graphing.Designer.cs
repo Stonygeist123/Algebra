@@ -31,7 +31,6 @@
             components = new System.ComponentModel.Container();
             Txt_Fn = new TextBox();
             label1 = new Label();
-            Btn_Graph = new Button();
             Img_Graph = new PictureBox();
             bindingSource1 = new BindingSource(components);
             Txt_Dx = new Label();
@@ -56,17 +55,6 @@
             label1.Size = new Size(39, 15);
             label1.TabIndex = 1;
             label1.Text = "f(x) = ";
-            // 
-            // Btn_Graph
-            // 
-            Btn_Graph.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            Btn_Graph.Location = new Point(616, 12);
-            Btn_Graph.Name = "Btn_Graph";
-            Btn_Graph.Size = new Size(75, 23);
-            Btn_Graph.TabIndex = 2;
-            Btn_Graph.Text = "Graph";
-            Btn_Graph.UseVisualStyleBackColor = true;
-            Btn_Graph.Click += Btn_Graph_Click;
             // 
             // Img_Graph
             // 
@@ -93,7 +81,6 @@
             ClientSize = new Size(1279, 524);
             Controls.Add(Txt_Dx);
             Controls.Add(Img_Graph);
-            Controls.Add(Btn_Graph);
             Controls.Add(label1);
             Controls.Add(Txt_Fn);
             Name = "Graphing";
@@ -109,7 +96,6 @@
 
         private TextBox Txt_Fn;
         private Label label1;
-        private Button Btn_Graph;
         private PictureBox Img_Graph;
         private BindingSource bindingSource1;
         private Label Txt_Dx;

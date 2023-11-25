@@ -57,7 +57,7 @@ namespace Algebra.Syntax.Parser
         public Expr Expr { get; }
         public AbsExpr(Expr expr) => Expr = expr.Simplify();
         public override Expr? Derivative() => new BinaryExpr(Expr.Simplify().Derivative()?.Simplify() ?? new ErrorExpr(), TokenKind.Star, BuiltIns.FnsDerivs("abs", Expr));
-        public override float Evaluate(Dictionary<string, float> symbols, float param) => MathF.Abs((float)Expr.Evaluate(symbols, param));
+        public override float Evaluate(Dictionary<string, float> symbols, float param) => MathF.Abs(Expr.Evaluate(symbols, param));
         public override Expr Simplify() => Expr is LiteralExpr l ? new LiteralExpr(BuiltIns.Fns["abs"](l.Value)) : new AbsExpr(Expr);
         public override string ToString() => "|" + Expr.ToString() + "|";
     }
@@ -122,7 +122,7 @@ namespace Algebra.Syntax.Parser
             float left = Left.Evaluate(symbols, param);
             float right = Right.Evaluate(symbols, param);
             if (float.IsNaN(left) || float.IsNaN(right) ||
-                (Op == TokenKind.Slash && right == 0f) ||
+                (Op == TokenKind.Slash && Math.Abs(right) <= 1e-2f) ||
                 (Op == TokenKind.Power && left < 0 && right < 1 && right > 0 && 1f / right % 2 == 0))
                 return float.NaN;
 
@@ -249,14 +249,9 @@ namespace Algebra.Syntax.Parser
             Arg = arg.Simplify();
         }
 
-        public override float Evaluate(Dictionary<string, float> symbols, float param) => (float)Fn(Arg.Evaluate(symbols, param));
-        public override Expr? Derivative()
-        {
-            Expr? arg = Arg.Derivative();
-            return arg is null ? null : new BinaryExpr(arg, TokenKind.Star, BuiltIns.FnsDerivs(Name, Arg)).Simplify();
-        }
-
-        public override Expr Simplify() => Arg is LiteralExpr l ? new LiteralExpr(Fn(l.Value)) : (Expr)new FunctionExpr(Name, Arg);
+        public override float Evaluate(Dictionary<string, float> symbols, float param) => Fn(Arg.Evaluate(symbols, param));
+        public override Expr? Derivative() => Arg.Derivative() is Expr dx ? new BinaryExpr(dx, TokenKind.Star, BuiltIns.FnsDerivs(Name, Arg)).Simplify() : null;
+        public override Expr Simplify() => Arg is LiteralExpr l ? new LiteralExpr(Fn(l.Value)) : new FunctionExpr(Name, Arg);
         public override string ToString() => Name + "(" + Arg.ToString() + ")";
     }
 
@@ -290,12 +285,9 @@ namespace Algebra.Syntax.Parser
         }
 
         public override Expr? Derivative() => null;
-        public override Expr Simplify()
-        {
-            if (Start is LiteralExpr s && End is LiteralExpr && Expr is LiteralExpr)
-                return new LiteralExpr(Evaluate(new() { { Id, s.Value } }, 1));
-            return this;
-        }
+        public override Expr Simplify() => Start is LiteralExpr s && End is LiteralExpr && Expr is LiteralExpr
+                ? new LiteralExpr(Evaluate(new() { { Id, s.Value } }, 1))
+                : this;
 
         public override string ToString() => $"Σ({Id} = {Start}, {End}, {Expr})";
     }

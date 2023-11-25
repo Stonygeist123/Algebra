@@ -1,3 +1,4 @@
+using Algebra.Algorithms;
 using Algebra.Miscellaneous;
 using Algebra.Syntax.Lexer;
 using Algebra.Syntax.Parser;
@@ -8,19 +9,13 @@ namespace Algebra
     public partial class Graphing : Form
     {
         private float _scaleFactor = 50f;
-        private const float _xAxisCount = 5, _yAxisCount = 5;
+        private const float _xAxisCount = 7.5f, _yAxisCount = 7.5f;
         private Expr? _expr = null, _dx = null;
         private bool _hasError = false;
-        private const float increment = .5f, graphWidth = 1.5f;
+        private const float graphWidth = 1.5f;
+        private const float increment = .01f;
         public Graphing() => InitializeComponent();
         private void Form1_Load(object sender, EventArgs e) => DrawGraph();
-        private void Btn_Graph_Click(object sender, EventArgs e)
-        {
-            Analyse();
-            if (!_hasError)
-                DrawGraph();
-        }
-
         private void Analyse()
         {
             Lexer lexer = new(Txt_Fn.Text);
@@ -46,7 +41,7 @@ namespace Algebra
             SKSurface surface = SKSurface.Create(imgInfo);
             SKCanvas canvas = surface.Canvas;
             canvas.Clear();
-            SKPaint mainPaint = new()
+            SKPaint pathPaint = new()
             {
                 Color = SKColors.Black,
                 StrokeWidth = 4,
@@ -59,16 +54,16 @@ namespace Algebra
                 IsStroke = true
             };
 
-            canvas.DrawLine(new(0, h / 2), new(w, h / 2), mainPaint);
-            canvas.DrawLine(new(w / 2, 0), new(w / 2, h), mainPaint);
+            canvas.DrawLine(new(0, h / 2), new(w, h / 2), pathPaint);
+            canvas.DrawLine(new(w / 2, 0), new(w / 2, h), pathPaint);
 
-            mainPaint.Color = SKColors.DarkGray;
-            mainPaint.StrokeWidth = 2;
+            pathPaint.Color = SKColors.DarkGray;
+            pathPaint.StrokeWidth = 2;
             /* x-Axis */
             for (float n = 0; n < w / 2; n += w / 2 / _xAxisCount)
             {
                 float x = n + w / 2;
-                canvas.DrawLine(new(x, h / 2 + 15), new(x, h / 2 - 15), mainPaint);
+                canvas.DrawLine(new(x, h / 2 + 15), new(x, h / 2 - 15), pathPaint);
                 if (n != 0)
                     canvas.DrawText($"{n / _scaleFactor}", new(x + 5, h / 2 - 25), textPaint);
                 else
@@ -78,7 +73,7 @@ namespace Algebra
             for (float n = w / 2 / _xAxisCount; n < w / 2; n += w / 2 / _xAxisCount)
             {
                 float x = (w / 2) - n;
-                canvas.DrawLine(new(x, h / 2 + 15), new(x, h / 2 - 15), mainPaint);
+                canvas.DrawLine(new(x, h / 2 + 15), new(x, h / 2 - 15), pathPaint);
                 canvas.DrawText($"{-(n / _scaleFactor)}", new(x + 5, h / 2 - 25), textPaint);
             }
 
@@ -86,7 +81,7 @@ namespace Algebra
             for (float n = 0; n < h / 2; n += h / 2 / _yAxisCount)
             {
                 float y = n + h / 2;
-                canvas.DrawLine(new(w / 2 - 15, y), new(w / 2 + 15, y), mainPaint);
+                canvas.DrawLine(new(w / 2 - 15, y), new(w / 2 + 15, y), pathPaint);
                 if (n != 0)
                     canvas.DrawText($"{-(n / _scaleFactor)}", new(w / 2 + 20, y + 4.5f), textPaint);
             }
@@ -94,13 +89,13 @@ namespace Algebra
             for (float n = h / 2 / _yAxisCount; n < w / 2; n += h / 2 / _yAxisCount)
             {
                 float y = (h / 2) - n;
-                canvas.DrawLine(new(w / 2 - 15, y), new(w / 2 + 15, y), mainPaint);
-                canvas.DrawText($"{(n / _scaleFactor)}", new(w / 2 + 20, y + 4.5f), textPaint);
+                canvas.DrawLine(new(w / 2 - 15, y), new(w / 2 + 15, y), pathPaint);
+                canvas.DrawText($"{n / _scaleFactor}", new(w / 2 + 20, y + 4.5f), textPaint);
             }
 
             if (!_hasError && _expr is not null)
             {
-                mainPaint = new()
+                pathPaint = new()
                 {
                     Color = SKColors.DarkCyan,
                     StrokeWidth = graphWidth,
@@ -121,27 +116,56 @@ namespace Algebra
                     }
 
                 path.MoveTo(new SKPoint(i + w / 2, -py + h / 2));
-                for (i = -w / 2; i < w / 2; i += increment)
+                List<SKPoint> roots = new();
+                for (i = -w / 2; i <= w / 2; i += increment)
                 {
-                    float? p_y = _expr.Evaluate(symbols, i), p_y1 = _expr.Evaluate(symbols, i + increment);
-                    if (p_y is float y && p_y1 is float y1 && !float.IsNaN(y) && !float.IsNaN(y1) && float.IsFinite(y) && float.IsFinite(y1))
+                    float? p_y1 = _expr.Evaluate(symbols, i), p_y2 = _expr.Evaluate(symbols, i + increment);
+                    if (MathF.Abs(p_y1 ?? 1) <= 1e-3f || MathF.Abs(p_y2 ?? 1) <= 1e-3f)
                     {
-                        float coord_y = -_scaleFactor * y + h / 2;
+                        Console.WriteLine();
+                    }
+
+                    if (p_y1 is float y1 && p_y2 is float y2 && !float.IsNaN(y1) && !float.IsNaN(y2) && float.IsFinite(y1) && float.IsFinite(y2))
+                    {
                         float coord_y1 = -_scaleFactor * y1 + h / 2;
-                        if (float.IsInfinity(coord_y) || float.IsInfinity(coord_y1))
+                        float coord_y2 = -_scaleFactor * y2 + h / 2;
+                        if (float.IsInfinity(coord_y1) || float.IsInfinity(coord_y2))
                             continue;
 
                         float x1 = _scaleFactor * i + w / 2;
                         float x2 = _scaleFactor * (i + increment) + w / 2;
-                        path.QuadTo(x1, coord_y, x2, coord_y1);
+                        path.QuadTo(new(x1, coord_y1), new(x2, coord_y2));
+
+                        SKPoint? p0 = Roots.CheckRoot(new(i, y1), new(i + increment, y2), _expr, symbols);
+                        if (p0 is not null)
+                            roots.Add(new(_scaleFactor * p0.Value.X + w / 2, -_scaleFactor * p0.Value.Y + h / 2));
+                    }
+                    else if (path.PointCount > 1)
+                    {
+                        canvas.DrawPath(path, pathPaint);
+                        path.Dispose();
+                        path = new();
                     }
                 }
 
-                canvas.DrawPath(path, mainPaint);
+                canvas.DrawPath(path, pathPaint);
                 path.Dispose();
+
+                SKPaint detailsPaint = new()
+                {
+                    Color = SKColors.Purple,
+                    StrokeWidth = graphWidth,
+                    IsAntialias = true,
+                    IsStroke = true,
+                    Style = SKPaintStyle.Fill
+                };
+
+                foreach (SKPoint r in roots)
+                    canvas.DrawCircle(r, 5f, detailsPaint);
                 if (_dx is not null)
                 {
-                    mainPaint = new()
+                    Dictionary<SKPoint, bool> extrema = new();
+                    pathPaint = new()
                     {
                         Color = SKColors.Red,
                         StrokeWidth = graphWidth,
@@ -161,24 +185,39 @@ namespace Algebra
                         }
 
                     path.MoveTo(new SKPoint(_scaleFactor * i + w / 2, -_scaleFactor * py + h / 2));
+                    Expr? dx1 = _dx.Derivative(), dx2 = dx1?.Derivative();
                     for (i = -w / 2; i < w / 2; i += increment)
                     {
-                        float? p_y = _dx.Evaluate(symbols, i), p_y1 = _dx.Evaluate(symbols, i + increment);
-                        if (p_y is float y && p_y1 is float y1 && !float.IsNaN(y) && !float.IsNaN(y1) && float.IsFinite(y) && float.IsFinite(y1))
+                        float? pY1 = _dx.Evaluate(symbols, i), pY2 = _dx.Evaluate(symbols, i + increment);
+                        if (pY1 is float y1 && pY2 is float y2 && !float.IsNaN(y1) && !float.IsNaN(y2) && float.IsFinite(y1) && float.IsFinite(y2))
                         {
-                            float coord_y = -_scaleFactor * y + h / 2;
                             float coord_y1 = -_scaleFactor * y1 + h / 2;
-                            if (float.IsInfinity(coord_y) || float.IsInfinity(coord_y))
+                            float coord_y2 = -_scaleFactor * y2 + h / 2;
+                            if (float.IsInfinity(coord_y1) || float.IsInfinity(coord_y2))
                                 continue;
 
                             float x1 = _scaleFactor * i + w / 2;
                             float x2 = _scaleFactor * (i + increment) + w / 2;
-                            path.QuadTo(x1, coord_y, x2, coord_y1);
+                            path.QuadTo(x1, coord_y1, x2, coord_y2);
+
+                            SKPoint? p0 = Roots.CheckRoot(new(i, y1), new(i + increment, y2), _dx, symbols);
+                            if (p0 is not null && dx1 is not null)
+                            {
+                                float v = dx1.Evaluate(symbols, p0.Value.X);
+                                float v1 = dx2?.Evaluate(symbols, p0.Value.X) ?? 0f;
+                                if (MathF.Abs(v) > 1e-5f && Math.Abs(v1) <= 1e-5f)
+                                    extrema.TryAdd(new(_scaleFactor * p0.Value.X + w / 2, -_scaleFactor * _expr.Evaluate(symbols, p0.Value.X) + h / 2), v < 0);
+                            }
                         }
                     }
 
-                    canvas.DrawPath(path, mainPaint);
+                    canvas.DrawPath(path, pathPaint);
                     path.Dispose();
+                    foreach (KeyValuePair<SKPoint, bool> e in extrema)
+                    {
+                        canvas.DrawCircle(e.Key, 5f, detailsPaint);
+                        canvas.DrawText(e.Value ? "HP" : "LP", new(e.Key.X + 15, e.Key.Y - 15), textPaint);
+                    }
                 }
 
                 canvas.Save();
