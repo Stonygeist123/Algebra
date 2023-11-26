@@ -150,7 +150,7 @@ namespace Algebra.Syntax.Parser
                 TokenKind.Minus => new BinaryExpr(leftDx, TokenKind.Minus, rightDx),
                 TokenKind.Star => new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Plus, new BinaryExpr(Left, TokenKind.Star, rightDx)),
                 TokenKind.Slash => new BinaryExpr(new BinaryExpr(new BinaryExpr(leftDx, TokenKind.Star, Right), TokenKind.Minus, new BinaryExpr(Left, TokenKind.Star, rightDx)), TokenKind.Slash, new BinaryExpr(Right, TokenKind.Power, new LiteralExpr(2))),
-                TokenKind.Power => Left is LiteralExpr ? new BinaryExpr(rightDx, TokenKind.Star, new BinaryExpr(this, TokenKind.Star, new FunctionExpr("ln", Left))) : new BinaryExpr(leftDx, TokenKind.Star, Right is LiteralExpr r && r.Value == 1 ? Left : new BinaryExpr(Right, TokenKind.Star, new BinaryExpr(Left, TokenKind.Power, new BinaryExpr(Right, TokenKind.Minus, new LiteralExpr(1))))),
+                TokenKind.Power => Left is LiteralExpr ? new BinaryExpr(rightDx, TokenKind.Star, new BinaryExpr(this, TokenKind.Star, new FunctionExpr("ln", Left))) : new BinaryExpr(leftDx, TokenKind.Star, new BinaryExpr(Right, TokenKind.Star, new BinaryExpr(Left, TokenKind.Power, new BinaryExpr(Right, TokenKind.Minus, new LiteralExpr(1))))),
                 _ => null
             })?.Simplify();
         }

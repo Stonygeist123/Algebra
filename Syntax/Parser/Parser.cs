@@ -61,6 +61,7 @@ namespace Algebra.Syntax.Parser
                 return new ErrorExpr();
             }
 
+            Advance();
             return CheckExtension(new FunctionExpr(lexeme, arg));
         }
 
