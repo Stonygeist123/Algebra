@@ -30,7 +30,7 @@ namespace Algebra
         }, _textPaint = new()
         {
             Color = SKColors.Black,
-            StrokeWidth = 1.25f,
+            StrokeWidth = 1,
             IsAntialias = true,
             IsStroke = true
         }, _axisPaint = new()
@@ -190,8 +190,6 @@ namespace Algebra
             _canvas.DrawLine(new(0, _h / 2), new(_w, _h / 2), _axisPaint);
             _canvas.DrawLine(new(_w / 2, 0), new(_w / 2, _h), _axisPaint);
 
-            _scalingPaint.Color = SKColors.DarkGray;
-            _scalingPaint.StrokeWidth = 2;
             /* x-Axis */
             for (float n = 0; n <= _w / 2; n += _w / 2 / _xAxisCount)
             {

@@ -19,7 +19,7 @@ namespace Algebra.Miscellaneous
             { "acsc", x => MathF.Asin(1 / x) },
             { "acot", x => MathF.Atan(1 / x) },
             { "abs", MathF.Abs },
-            { "sgn", x => x > 0 ? 1 : x < 0 ? -1 : float.NaN },
+            { "sgn", x => float.IsNaN(x)  || float.IsInfinity(x) ? float.NaN : MathF.Sign(x) },
             { "ln",  MathF.Log }
         };
 

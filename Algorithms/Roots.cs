@@ -12,7 +12,7 @@ namespace Algebra.Algorithms
                 return null;
 
             float x = p.X;
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < 50 && !float.IsNaN(x) && float.IsFinite(x); i++)
             {
                 float m = dx.Evaluate(symbols, x);
                 if (float.IsNaN(m) || !float.IsFinite(m))
@@ -25,7 +25,6 @@ namespace Algebra.Algorithms
             float y = fn.Evaluate(symbols, x);
             if (MathF.Abs(y) <= Zero)
                 return new(x, y);
-
             return null;
 
             /*if (MathF.Abs(p1.Y) <= Zero)
